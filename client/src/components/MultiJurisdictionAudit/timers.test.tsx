@@ -52,10 +52,10 @@ describe('timers', () => {
     clock = FakeTimers.install()
   })
   afterEach(() => clock.uninstall())
-  it.skip('refreshes every five minutes on progress', async () => {
-    // TEST TODO
+  it('refreshes every five minutes on progress', async () => {
     const expectedCalls = [
       aaApiCalls.getUser,
+      ...loadEach,
       ...loadEach,
       ...loadEach,
       ...loadEach,
@@ -67,12 +67,11 @@ describe('timers', () => {
       })
       screen.getByText('Will refresh in 5 minutes')
       await act(async () => {
-        await clock.tickAsync(1000 * 60)
+        clock.tick(1000 * 60)
       })
       screen.getByText('Will refresh in 4 minutes')
       await act(async () => {
-        // Five minutes minus the ten seconds we already ticked
-        await clock.tickAsync(1000 * (60 * 5 - 10))
+        clock.tick(1000 * (60 * 4))
       })
       screen.getByText('Will refresh in 5 minutes')
     })
