@@ -6,7 +6,7 @@ from flask import jsonify, request
 from jsonschema import validate
 from werkzeug.exceptions import BadRequest, Conflict
 from sqlalchemy import and_
-from sqlalchemy.orm import load_only
+from sqlalchemy.orm import load_only, joinedload
 
 from . import api
 from ..database import db_session
@@ -264,16 +264,21 @@ def sampled_ballot_interpretations_to_cvrs(contest: Contest) -> supersimple.SAMP
     )
     # For targeted contests, count the number of times the ballot was sampled
     if contest.is_targeted:
-        ballots = (
+        ballots_query = (
             ballots_query.join(SampledBallotDraw)
             .filter_by(contest_id=contest.id)
             .group_by(SampledBallot.id)
             .with_entities(SampledBallot, func.count(SampledBallotDraw.ticket_number))
-            .all()
         )
     # For opportunistic contests, we say each ballot was only sampled once
     else:
-        ballots = ballots_query.with_entities(SampledBallot, literal(1)).all()
+        ballots_query = ballots_query.with_entities(SampledBallot, literal(1))
+
+    ballots = ballots_query.options(
+        joinedload(SampledBallot.interpretations)
+        .joinedload(BallotInterpretation.selected_choices)
+        .load_only(ContestChoice.id)
+    ).all()
 
     # The CVR we build should have a 1 for each choice that got voted for,
     # and a 0 otherwise. There are a couple special cases:
@@ -458,6 +463,16 @@ def sampled_all_ballots(round: Round, election: Election):
     )
 
 
+def is_contest_on_cvr_ballot(
+    contest: Contest, cvr_ballot: CvrBallot, cvr_contests_metadata: JSONDict
+) -> bool:
+    interpretations = cvr_ballot.interpretations.split(",")
+    return any(
+        interpretations[choice["column"]] != ""
+        for choice in cvr_contests_metadata[contest.name]["choices"].values()
+    )
+
+
 class BallotDraw(NamedTuple):
     # ballot_key: ((jurisdiction name, batch name), ballot_position)
     ballot_key: Tuple[Tuple[str, str], int]
@@ -580,21 +595,14 @@ def sample_ballots(
             manifest = defaultdict(list)
 
             for jurisdiction in contest.jurisdictions:
-                cvr_contests_metadata = typing_cast(
-                    JSONDict, jurisdiction.cvr_contests_metadata
-                )
-                contest_columns = [
-                    choice["column"]
-                    for choice in cvr_contests_metadata[contest.name][
-                        "choices"
-                    ].values()
-                ]
-
                 for cvr_ballot, jurisdiction_id in cvr_ballots:
                     if jurisdiction_id != jurisdiction.id:
                         continue
-                    interpretations = cvr_ballot.interpretations.split(",")
-                    if any(interpretations[column] != "" for column in contest_columns):
+                    if is_contest_on_cvr_ballot(
+                        contest,
+                        cvr_ballot,
+                        typing_cast(JSONDict, jurisdiction.cvr_contests_metadata),
+                    ):
                         manifest[batch_id_to_key[cvr_ballot.batch_id]].append(
                             cvr_ballot.ballot_position
                         )
@@ -760,7 +768,7 @@ def create_round(election: Election):
         def select_sample_size(options):
             audit_type = AuditType(election.audit_type)
             if audit_type == AuditType.BALLOT_POLLING:
-                return options.get("0.9", options["asn"])
+                return options.get("0.9", options.get("asn"))
             elif audit_type == AuditType.BATCH_COMPARISON:
                 return options["macro"]
             else:

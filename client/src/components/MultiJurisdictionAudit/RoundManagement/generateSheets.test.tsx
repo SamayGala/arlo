@@ -11,12 +11,12 @@ import { IAuditBoard } from '../useAuditBoards'
 import { jaApiCalls } from '../_mocks'
 import { dummyBallots } from '../../DataEntry/_mocks'
 
-const mockJurisdiction = jaApiCalls.getUser.response.jurisdictions[0]
+const mockJurisdiction = jaApiCalls.getUser.response.user.jurisdictions[0]
 
 const mockSavePDF = jest.fn()
 jest.mock('jspdf', () => {
   const realjspdf = jest.requireActual('jspdf')
-  // eslint-disable-next-line func-names
+  // eslint-disable-next-line func-names, @typescript-eslint/no-explicit-any
   return function(options: any) {
     const mockjspdf = new realjspdf(options)
     return {
@@ -59,6 +59,7 @@ describe('generateSheets', () => {
   })
 
   describe('downloadPlaceholders', () => {
+    jest.setTimeout(10000)
     it('generates placeholder sheets', async () => {
       const pdf = downloadPlaceholders(
         1,

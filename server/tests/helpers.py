@@ -5,18 +5,18 @@ from flask.testing import FlaskClient
 from werkzeug.wrappers import Response
 from sqlalchemy.exc import IntegrityError
 
-from ..auth.lib import (
-    UserType,
-    _USER,
-    _SUPERADMIN,
-)
+from ..auth.lib import UserType
+from ..auth import lib as auth_lib
 from ..database import db_session
 from ..models import *  # pylint: disable=wildcard-import
 from ..api.audit_boards import end_round
 
 
 DEFAULT_AA_EMAIL = "admin@example.com"
-DEFAULT_JA_EMAIL = "jurisdiction.admin@example.com"
+
+
+def default_ja_email(election_id: str):
+    return f"jurisdiction.admin-{election_id}@example.com"
 
 
 def post_json(client: FlaskClient, url: str, obj=None) -> Any:
@@ -42,26 +42,28 @@ def assert_ok(rv: Response):
 
 
 def set_logged_in_user(
-    client: FlaskClient, user_type: UserType, user_key=DEFAULT_AA_EMAIL
+    client: FlaskClient,
+    user_type: UserType,
+    user_key=DEFAULT_AA_EMAIL,
+    from_superadmin=False,
 ):
     with client.session_transaction() as session:  # type: ignore
-        session[_USER] = {"type": user_type, "key": user_key}
+        auth_lib.set_loggedin_user(session, user_type, user_key, from_superadmin)
 
 
 def clear_logged_in_user(client: FlaskClient):
     with client.session_transaction() as session:  # type: ignore
-        session[_USER] = None
+        auth_lib.clear_loggedin_user(session)
 
 
-def set_superadmin(client: FlaskClient):
+def set_superadmin_user(client: FlaskClient, email: str):
     with client.session_transaction() as session:  # type: ignore
-        session[_SUPERADMIN] = True
+        auth_lib.set_superadmin_user(session, email)
 
 
-def clear_superadmin(client: FlaskClient):
+def clear_superadmin_user(client: FlaskClient):
     with client.session_transaction() as session:  # type: ignore
-        if _SUPERADMIN in session:
-            del session[_SUPERADMIN]
+        auth_lib.clear_superadmin_user(session)
 
 
 def create_user(email=DEFAULT_AA_EMAIL) -> User:
@@ -88,9 +90,7 @@ def create_org_and_admin(
     return org.id, audit_admin.id
 
 
-def create_jurisdiction_admin(
-    jurisdiction_id: str, user_email: str = DEFAULT_JA_EMAIL
-) -> str:
+def create_jurisdiction_admin(jurisdiction_id: str, user_email: str) -> str:
     jurisdiction_admin = create_user(user_email)
     db_session.add(jurisdiction_admin)
     admin = JurisdictionAdministration(
@@ -113,9 +113,7 @@ def create_jurisdiction(
 
 
 def create_jurisdiction_and_admin(
-    election_id: str,
-    jurisdiction_name: str = "Test Jurisdiction",
-    user_email: str = DEFAULT_JA_EMAIL,
+    election_id: str, jurisdiction_name: str, user_email: str,
 ) -> Tuple[str, str]:
     jurisdiction = create_jurisdiction(election_id, jurisdiction_name)
     ja_id = create_jurisdiction_admin(jurisdiction.id, user_email)

@@ -1,4 +1,4 @@
-import React, { useContext } from 'react'
+import React from 'react'
 import { waitFor, fireEvent, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import {
@@ -19,13 +19,14 @@ import {
   talliesFile,
   auditSettings,
   roundMocks,
+  cvrsFile,
 } from './useSetupMenuItems/_mocks'
 import {
   routerTestProps,
   withMockFetch,
   renderWithRouter,
 } from '../testUtilities'
-import AuthDataProvider, { AuthDataContext } from '../UserContext'
+import AuthDataProvider, { useAuthDataContext } from '../UserContext'
 import getJurisdictionFileStatus from './useSetupMenuItems/getJurisdictionFileStatus'
 import getRoundStatus from './useSetupMenuItems/getRoundStatus'
 import { jaApiCalls, aaApiCalls } from './_mocks'
@@ -60,8 +61,8 @@ describe('AA setup flow', () => {
   // AuditAdminView will only be rendered once the user is logged in, so
   // we simulate that.
   const AuditAdminViewWithAuth: React.FC = () => {
-    const { isAuthenticated } = useContext(AuthDataContext)
-    return isAuthenticated ? <AuditAdminView /> : null
+    const auth = useAuthDataContext()
+    return auth ? <AuditAdminView /> : null
   }
 
   const loadEach = [
@@ -77,8 +78,8 @@ describe('AA setup flow', () => {
       ...loadEach,
       ...loadEach,
       aaApiCalls.getSettings(auditSettings.all),
-      ...loadEach,
       aaApiCalls.getJurisdictionFile,
+      ...loadEach,
       aaApiCalls.getSettings(auditSettings.all),
       ...loadEach,
     ]
@@ -114,7 +115,7 @@ describe('AA setup flow', () => {
       aaApiCalls.getSettings(auditSettings.all),
       ...loadEach,
       aaApiCalls.getSettings(auditSettings.all),
-      aaApiCalls.putSettings,
+      aaApiCalls.putSettings(auditSettings.all),
       ...loadEach,
       aaApiCalls.getSettings(auditSettings.all),
       aaApiCalls.getJurisdictions,
@@ -160,8 +161,8 @@ describe('AA setup flow', () => {
       ...loadEach,
       ...loadEach,
       aaApiCalls.getSettings(auditSettings.all),
-      ...loadEach,
       aaApiCalls.getJurisdictionFile,
+      ...loadEach,
     ]
     await withMockFetch(expectedCalls, async () => {
       const { container, queryAllByText } = render(
@@ -245,8 +246,8 @@ describe('JA setup', () => {
   // JurisdictionAdminView will only be rendered once the user is logged in, so
   // we simulate that.
   const JurisdictionAdminViewWithAuth: React.FC = () => {
-    const { isAuthenticated } = useContext(AuthDataContext)
-    return isAuthenticated ? <JurisdictionAdminView /> : null
+    const auth = useAuthDataContext()
+    return auth ? <JurisdictionAdminView /> : null
   }
 
   const renderView = () =>
@@ -295,27 +296,32 @@ describe('JA setup', () => {
       jaApiCalls.getBallotManifestFile(manifestMocks.processed),
     ]
     await withMockFetch(expectedCalls, async () => {
-      const { container } = renderView()
+      renderView()
       await screen.findByText('Audit Source Data')
-      const csvInput = screen.getAllByLabelText('Select a CSV...')[0]
-      fireEvent.change(csvInput, { target: { files: [] } })
-      fireEvent.blur(csvInput)
-      await waitFor(() =>
-        expect(screen.queryByText('You must upload a file')).toBeTruthy()
+      const [manifestInput, talliesInput] = screen.getAllByLabelText(
+        'Select a CSV...'
       )
-      fireEvent.change(csvInput, { target: { files: [manifestFile] } })
+      const [manifestButton, talliesButton] = screen.getAllByRole('button', {
+        name: 'Upload File',
+      })
+
+      expect(talliesInput).toBeDisabled()
+      expect(talliesButton).toBeDisabled()
+
+      userEvent.click(manifestButton)
+      await screen.findByText('You must upload a file')
+
+      userEvent.upload(manifestInput, manifestFile)
       await waitFor(() =>
-        expect(screen.queryByText('You must upload a file')).toBeFalsy()
+        expect(
+          screen.queryByText('You must upload a file')
+        ).not.toBeInTheDocument()
       )
-      await waitFor(() =>
-        expect(screen.queryAllByLabelText('Select a CSV...').length).toBe(1)
+
+      userEvent.click(manifestButton)
+      await screen.findByText(
+        'Upload successfully completed at 6/8/2020, 9:39:14 PM.'
       )
-      await waitFor(() =>
-        expect(screen.queryByLabelText('manifest.csv')).toBeTruthy()
-      )
-      userEvent.click(screen.getAllByText('Upload File')[0])
-      await screen.findByText('Candidate Totals by Batch')
-      expect(container).toMatchSnapshot()
     })
   })
 
@@ -331,29 +337,59 @@ describe('JA setup', () => {
       jaApiCalls.getBatchTalliesFile(talliesMocks.processed),
     ]
     await withMockFetch(expectedCalls, async () => {
-      const { container } = renderView()
+      renderView()
       await screen.findByText('Audit Source Data')
-      const csvInput = screen.getByLabelText('Select a CSV...')
-      fireEvent.change(csvInput, { target: { files: [] } })
-      fireEvent.blur(csvInput)
+      const talliesInput = screen.getByLabelText('Select a CSV...')
+      const talliesButton = screen.getByRole('button', { name: 'Upload File' })
+
+      userEvent.click(talliesButton)
+      await screen.findByText('You must upload a file')
+
+      userEvent.upload(talliesInput, talliesFile)
       await waitFor(() =>
-        expect(screen.queryByText('You must upload a file')).toBeTruthy()
+        expect(
+          screen.queryByText('You must upload a file')
+        ).not.toBeInTheDocument()
       )
-      fireEvent.change(csvInput, { target: { files: [talliesFile] } })
+
+      userEvent.click(talliesButton)
+      await screen.findByText(
+        'Upload successfully completed at 7/8/2020, 9:39:14 PM.'
+      )
+    })
+  })
+
+  it('submits CVRs', async () => {
+    const expectedCalls = [
+      jaApiCalls.getUser,
+      jaApiCalls.getSettings(auditSettings.ballotComparisonAll),
+      jaApiCalls.getRounds,
+      jaApiCalls.getBallotManifestFile(manifestMocks.processed),
+      jaApiCalls.getBatchTalliesFile(talliesMocks.empty),
+      jaApiCalls.getCVRSfile(cvrsMocks.empty),
+      jaApiCalls.putCVRs,
+      jaApiCalls.getCVRSfile(cvrsMocks.processed),
+    ]
+    await withMockFetch(expectedCalls, async () => {
+      renderView()
+      await screen.findByText('Audit Source Data')
+      const cvrsInput = screen.getByLabelText('Select a CSV...')
+      const cvrsButton = screen.getByRole('button', { name: 'Upload File' })
+
+      userEvent.click(cvrsButton)
+      await screen.findByText('You must upload a file')
+
+      userEvent.upload(cvrsInput, cvrsFile)
       await waitFor(() =>
-        expect(screen.queryByText('You must upload a file')).toBeFalsy()
+        expect(
+          screen.queryByText('You must upload a file')
+        ).not.toBeInTheDocument()
       )
-      await waitFor(() =>
-        expect(screen.queryByLabelText('Select a CSV...')).toBeFalsy()
+
+      userEvent.click(cvrsButton)
+      await screen.findByText(
+        'Upload successfully completed at 11/18/2020, 9:39:14 PM.'
       )
-      await waitFor(() =>
-        expect(screen.queryByLabelText('tallies.csv')).toBeTruthy()
-      )
-      userEvent.click(screen.getByText('Upload File'))
-      await waitFor(() =>
-        expect(screen.getAllByText('Replace File').length).toBe(2)
-      )
-      expect(container).toMatchSnapshot()
     })
   })
 })

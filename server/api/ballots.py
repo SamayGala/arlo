@@ -1,6 +1,7 @@
+from typing import cast as typing_cast
 import io, csv
 from sqlalchemy import func, literal_column
-from sqlalchemy.orm import contains_eager
+from sqlalchemy.orm import contains_eager, joinedload
 from sqlalchemy.dialects.postgresql import aggregate_order_by
 from flask import jsonify, request
 from werkzeug.exceptions import BadRequest, NotFound
@@ -9,6 +10,7 @@ from . import api
 from ..auth import restrict_access, UserType
 from ..database import db_session
 from ..models import *  # pylint: disable=wildcard-import
+from .rounds import is_contest_on_cvr_ballot
 from ..util.csv_download import csv_response, jurisdiction_timestamp_name
 from ..util.jsonschema import JSONDict, validate
 
@@ -149,10 +151,10 @@ def serialize_interpretation(interpretation: BallotInterpretation) -> JSONDict:
     }
 
 
-def serialize_ballot(ballot: SampledBallot, election: Election) -> JSONDict:
+def serialize_ballot(ballot: SampledBallot) -> JSONDict:
     batch = ballot.batch
     audit_board = ballot.audit_board
-    json_ballot = {
+    return {
         "id": ballot.id,
         "status": ballot.status,
         "interpretations": [
@@ -165,12 +167,26 @@ def serialize_ballot(ballot: SampledBallot, election: Election) -> JSONDict:
             "tabulator": batch.tabulator,
             "container": batch.container,
         },
-        "auditBoard": audit_board and {"id": audit_board.id, "name": audit_board.name,},
+        "auditBoard": audit_board and {"id": audit_board.id, "name": audit_board.name},
     }
-    if election.audit_type == AuditType.BALLOT_COMPARISON:
-        cvr = CvrBallot.query.get((batch.id, ballot.ballot_position))
-        json_ballot["imprintedId"] = cvr.imprinted_id
-    return json_ballot
+
+
+def serialize_ballot_comparison_ballot(
+    ballot: SampledBallot, cvr_ballot: CvrBallot, jurisdiction: Jurisdiction
+) -> JSONDict:
+    return {
+        **serialize_ballot(ballot),
+        "imprintedId": cvr_ballot.imprinted_id,
+        "contestsOnBallot": [
+            contest.id
+            for contest in jurisdiction.contests
+            if is_contest_on_cvr_ballot(
+                contest,
+                cvr_ballot,
+                typing_cast(JSONDict, jurisdiction.cvr_contests_metadata),
+            )
+        ],
+    }
 
 
 @api.route(
@@ -190,15 +206,22 @@ def list_ballots_for_jurisdiction(
         .filter_by(round_id=round.id)
         .outerjoin(SampledBallot.audit_board)
         .order_by(
-            AuditBoard.name, Batch.tabulator, Batch.name, SampledBallot.ballot_position
+            AuditBoard.name,
+            Batch.container,
+            Batch.tabulator,
+            Batch.name,
+            SampledBallot.ballot_position,
         )
         .options(
             contains_eager(SampledBallot.batch),
             contains_eager(SampledBallot.audit_board),
+            joinedload(SampledBallot.interpretations)
+            .joinedload(BallotInterpretation.selected_choices)
+            .load_only(ContestChoice.id),
         )
         .all()
     )
-    json_ballots = [serialize_ballot(b, election) for b in ballots]
+    json_ballots = [serialize_ballot(ballot) for ballot in ballots]
     return jsonify({"ballots": json_ballots})
 
 
@@ -208,7 +231,7 @@ def list_ballots_for_jurisdiction(
 )
 @restrict_access([UserType.AUDIT_BOARD])
 def list_ballots_for_audit_board(
-    election: Election,
+    election: Election,  # pylint: disable=unused-argument
     jurisdiction: Jurisdiction,  # pylint: disable=unused-argument
     round: Round,  # pylint: disable=unused-argument
     audit_board: AuditBoard,
@@ -216,11 +239,33 @@ def list_ballots_for_audit_board(
     ballots = (
         SampledBallot.query.filter_by(audit_board_id=audit_board.id)
         .join(Batch)
-        .order_by(Batch.tabulator, Batch.name, SampledBallot.ballot_position)
-        .options(contains_eager(SampledBallot.batch))
+        .outerjoin(
+            CvrBallot,
+            and_(
+                CvrBallot.batch_id == SampledBallot.batch_id,
+                CvrBallot.ballot_position == SampledBallot.ballot_position,
+            ),
+        )
+        .order_by(
+            Batch.container, Batch.tabulator, Batch.name, SampledBallot.ballot_position
+        )
+        .with_entities(SampledBallot, CvrBallot)
+        .options(
+            contains_eager(SampledBallot.batch),
+            joinedload(SampledBallot.interpretations)
+            .joinedload(BallotInterpretation.selected_choices)
+            .load_only(ContestChoice.id),
+        )
         .all()
     )
-    json_ballots = [serialize_ballot(b, election) for b in ballots]
+    json_ballots = [
+        (
+            serialize_ballot_comparison_ballot(ballot, cvr_ballot, jurisdiction)
+            if cvr_ballot
+            else serialize_ballot(ballot)
+        )
+        for ballot, cvr_ballot in ballots
+    ]
     return jsonify({"ballots": json_ballots})
 
 

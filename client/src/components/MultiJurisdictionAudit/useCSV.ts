@@ -1,62 +1,60 @@
 import { useEffect, useState } from 'react'
 import { toast } from 'react-toastify'
 import { api, poll } from '../utilities'
-import { IFileInfo } from './useJurisdictions'
+import { IAuditSettings } from './useAuditSettings'
 
-export type IFilePurpose = 'ballot-manifest' | 'batch-tallies' | 'cvrs'
-
-const filePurposeKeys: { [keys in IFilePurpose]: string } = {
-  'ballot-manifest': 'manifest',
-  'batch-tallies': 'batchTallies',
-  cvrs: 'cvrs',
+export enum FileProcessingStatus {
+  READY_TO_PROCESS = 'READY_TO_PROCESS',
+  PROCESSING = 'PROCESSING',
+  PROCESSED = 'PROCESSED',
+  ERRORED = 'ERRORED',
 }
 
-const loadCSV = async (
-  electionId: string,
-  jurisdictionId: string,
-  filePurpose: IFilePurpose
-): Promise<IFileInfo | null> => {
-  const response = await api<IFileInfo>(
-    `/election/${electionId}/jurisdiction/${jurisdictionId}/${filePurpose}`
-  )
-  if (!response) return null
-  return response
+export interface IFileInfo {
+  file: {
+    name: string
+    uploadedAt: string
+  } | null
+  processing: {
+    status: FileProcessingStatus
+    startedAt: string | null
+    completedAt: string | null
+    error: string | null
+  } | null
 }
+
+export const isFileProcessed = (file: IFileInfo): boolean =>
+  !!file.processing && file.processing.status === FileProcessingStatus.PROCESSED
+
+const loadCSVFile = async (
+  url: string,
+  shouldFetch: boolean
+): Promise<IFileInfo | null> =>
+  shouldFetch ? api<IFileInfo>(url) : { file: null, processing: null }
 
 const putCSVFile = async (
-  electionId: string,
-  jurisdictionId: string,
+  url: string,
   csv: File,
-  filePurpose: IFilePurpose
+  formKey: string
 ): Promise<boolean> => {
   const formData: FormData = new FormData()
-  formData.append(filePurposeKeys[filePurpose], csv, csv.name)
-  const response = await api(
-    `/election/${electionId}/jurisdiction/${jurisdictionId}/${filePurpose}`,
-    {
-      method: 'PUT',
-      body: formData,
-    }
-  )
+  formData.append(formKey, csv, csv.name)
+  const response = await api(url, {
+    method: 'PUT',
+    body: formData,
+  })
   return !!response
 }
 
-const deleteCSVFile = async (
-  electionId: string,
-  jurisdictionId: string,
-  filePurpose: IFilePurpose
-): Promise<boolean> => {
-  const response = await api(
-    `/election/${electionId}/jurisdiction/${jurisdictionId}/${filePurpose}`,
-    { method: 'DELETE' }
-  )
+const deleteCSVFile = async (url: string): Promise<boolean> => {
+  const response = await api(url, { method: 'DELETE' })
   return !!response
 }
 
 const useCSV = (
-  electionId: string,
-  jurisdictionId: string,
-  filePurpose: IFilePurpose
+  url: string,
+  formKey: string,
+  shouldFetch: boolean = true
 ): [
   IFileInfo | null,
   (csv: File) => Promise<boolean>,
@@ -66,21 +64,23 @@ const useCSV = (
 
   useEffect(() => {
     ;(async () => {
-      setCSV(await loadCSV(electionId, jurisdictionId, filePurpose))
+      setCSV(await loadCSVFile(url, shouldFetch))
     })()
-  }, [electionId, jurisdictionId, filePurpose])
+  }, [url, shouldFetch])
 
   const uploadCSV = async (csvFile: File): Promise<boolean> => {
-    if (await putCSVFile(electionId, jurisdictionId, csvFile, filePurpose)) {
-      setCSV(await loadCSV(electionId, jurisdictionId, filePurpose))
+    if (!shouldFetch) return false
+    if (await putCSVFile(url, csvFile, formKey)) {
+      setCSV(await loadCSVFile(url, shouldFetch))
       return true
     }
     return false
   }
 
   const deleteCSV = async (): Promise<boolean> => {
-    if (await deleteCSVFile(electionId, jurisdictionId, filePurpose)) {
-      setCSV(await loadCSV(electionId, jurisdictionId, filePurpose))
+    if (!shouldFetch) return false
+    if (await deleteCSVFile(url)) {
+      setCSV(await loadCSVFile(url, shouldFetch))
       return true
     }
     return false
@@ -93,43 +93,55 @@ const useCSV = (
     if (!(csv && csv.file) || isFinishedProcessing(csv)) return
 
     const isComplete = async () => {
-      const fileInfo = await loadCSV(electionId, jurisdictionId, filePurpose)
+      const fileInfo = await loadCSVFile(url, shouldFetch)
       return !!fileInfo && isFinishedProcessing(fileInfo)
     }
     const onComplete = async () => {
-      setCSV(await loadCSV(electionId, jurisdictionId, filePurpose))
+      setCSV(await loadCSVFile(url, shouldFetch))
     }
     poll(isComplete, onComplete, err => toast.error(err.message))
-  }, [electionId, jurisdictionId, csv, filePurpose])
+  }, [url, csv, shouldFetch])
 
   return [csv, uploadCSV, deleteCSV]
 }
 
-export const useBallotManifest = (
-  electionId: string,
-  jurisdictionId: string
-): [
-  IFileInfo | null,
-  (csv: File) => Promise<boolean>,
-  () => Promise<boolean>
-] => useCSV(electionId, jurisdictionId, 'ballot-manifest')
+export const useJurisdictionsFile = (
+  electionId: string
+): [IFileInfo | null, (csv: File) => Promise<boolean>] => {
+  const [csv, uploadCSV] = useCSV(
+    `/election/${electionId}/jurisdiction/file`,
+    'jurisdictions'
+  )
+  // Delete not supported
+  return [csv, uploadCSV]
+}
 
-export const useBatchTallies = (
+export const useStandardizedContestsFile = (
   electionId: string,
-  jurisdictionId: string
-): [
-  IFileInfo | null,
-  (csv: File) => Promise<boolean>,
-  () => Promise<boolean>
-] => useCSV(electionId, jurisdictionId, 'batch-tallies')
+  auditSettings: IAuditSettings | null
+): [IFileInfo | null, (csv: File) => Promise<boolean>] => {
+  const [csv, uploadCSV] = useCSV(
+    `/election/${electionId}/standardized-contests/file`,
+    'standardized-contests',
+    !!auditSettings && auditSettings.auditType === 'BALLOT_COMPARISON'
+  )
+  // Delete not supported
+  return [csv, uploadCSV]
+}
 
-export const useCVRS = (
-  electionId: string,
-  jurisdictionId: string
-): [
-  IFileInfo | null,
-  (csv: File) => Promise<boolean>,
-  () => Promise<boolean>
-] => useCSV(electionId, jurisdictionId, 'cvrs')
+export const useBallotManifest = (electionId: string, jurisdictionId: string) =>
+  useCSV(
+    `/election/${electionId}/jurisdiction/${jurisdictionId}/ballot-manifest`,
+    'manifest'
+  )
+
+export const useBatchTallies = (electionId: string, jurisdictionId: string) =>
+  useCSV(
+    `/election/${electionId}/jurisdiction/${jurisdictionId}/batch-tallies`,
+    'batchTallies'
+  )
+
+export const useCVRs = (electionId: string, jurisdictionId: string) =>
+  useCSV(`/election/${electionId}/jurisdiction/${jurisdictionId}/cvrs`, 'cvrs')
 
 export default useCSV

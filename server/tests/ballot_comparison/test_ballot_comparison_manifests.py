@@ -19,21 +19,31 @@ from ...bgcompute import (
 
 @pytest.fixture
 def manifests(client: FlaskClient, election_id: str, jurisdiction_ids: List[str]):
-    set_logged_in_user(client, UserType.JURISDICTION_ADMIN, DEFAULT_JA_EMAIL)
+    set_logged_in_user(
+        client, UserType.JURISDICTION_ADMIN, default_ja_email(election_id)
+    )
     rv = client.put(
         f"/api/election/{election_id}/jurisdiction/{jurisdiction_ids[0]}/ballot-manifest",
         data={
             "manifest": (
                 io.BytesIO(
                     b"Container,Tabulator,Batch Name,Number of Ballots\n"
-                    b"CONTAINER1,TABULATOR1,BATCH1,20\n"
-                    b"CONTAINER1,TABULATOR1,BATCH2,20\n"
-                    b"CONTAINER1,TABULATOR2,BATCH1,20\n"
-                    b"CONTAINER1,TABULATOR2,BATCH2,20\n"
-                    b"CONTAINER2,TABULATOR1,BATCH3,20\n"
-                    b"CONTAINER2,TABULATOR1,BATCH4,20\n"
-                    b"CONTAINER2,TABULATOR2,BATCH3,20\n"
-                    b"CONTAINER2,TABULATOR2,BATCH4,20"
+                    b"CONTAINER1,TABULATOR1,BATCH1,50\n"
+                    b"CONTAINER1,TABULATOR1,BATCH2,50\n"
+                    b"CONTAINER1,TABULATOR2,BATCH1,50\n"
+                    b"CONTAINER1,TABULATOR2,BATCH2,50\n"
+                    b"CONTAINER2,TABULATOR1,BATCH3,50\n"
+                    b"CONTAINER2,TABULATOR1,BATCH4,50\n"
+                    b"CONTAINER2,TABULATOR2,BATCH3,50\n"
+                    b"CONTAINER2,TABULATOR2,BATCH4,50\n"
+                    b"CONTAINER3,TABULATOR1,BATCH5,50\n"
+                    b"CONTAINER4,TABULATOR1,BATCH6,50\n"
+                    b"CONTAINER5,TABULATOR2,BATCH5,50\n"
+                    b"CONTAINER6,TABULATOR2,BATCH6,50\n"
+                    b"CONTAINER7,TABULATOR1,BATCH7,50\n"
+                    b"CONTAINER8,TABULATOR1,BATCH8,50\n"
+                    b"CONTAINER9,TABULATOR2,BATCH7,50\n"
+                    b"CONTAINER0,TABULATOR2,BATCH8,50\n"
                 ),
                 "manifest.csv",
             )
@@ -56,7 +66,7 @@ def manifests(client: FlaskClient, election_id: str, jurisdiction_ids: List[str]
         },
     )
     assert_ok(rv)
-    bgcompute_update_ballot_manifest_file()
+    bgcompute_update_ballot_manifest_file(election_id)
 
 
 @pytest.fixture
@@ -67,10 +77,10 @@ def cvrs(
     manifests,  # pylint: disable=unused-argument
 ):
     j1_cvr_lines = [
-        f"TABULATOR{tabulator},BATCH{batch},{ballot},{tabulator}-{batch}-{ballot},x,x,1,0,0,1,0"
+        f"TABULATOR{tabulator},BATCH{batch},{ballot},{tabulator}-{batch}-{ballot},x,x,{tabulator % 2},0,0,1,0"
         for tabulator in range(1, 3)
-        for batch in range(1, 5)
-        for ballot in range(1, 21)
+        for batch in range(1, 9)
+        for ballot in range(1, 51)
     ]
     j1_cvr = """Test Audit CVR Upload,5.2.16.1,,,,,,,,,,
 ,,,,,,,Contest 1 (Vote For=1),Contest 1 (Vote For=1),Contest 2 (Vote For=2),Contest 2 (Vote For=2),Contest 2 (Vote For=2)
@@ -80,7 +90,9 @@ CvrNumber,TabulatorNum,BatchId,RecordId,ImprintedId,PrecinctPortion,BallotType,R
         [f"{i},{line}" for i, line in enumerate(j1_cvr_lines)]
     )
 
-    set_logged_in_user(client, UserType.JURISDICTION_ADMIN, DEFAULT_JA_EMAIL)
+    set_logged_in_user(
+        client, UserType.JURISDICTION_ADMIN, default_ja_email(election_id)
+    )
     rv = client.put(
         f"/api/election/{election_id}/jurisdiction/{jurisdiction_ids[0]}/cvrs",
         data={"cvrs": (io.BytesIO(j1_cvr.encode()), "cvrs.csv",)},
@@ -106,7 +118,7 @@ CvrNumber,TabulatorNum,BatchId,RecordId,ImprintedId,PrecinctPortion,BallotType,R
         data={"cvrs": (io.BytesIO(j2_cvr.encode()), "cvrs.csv",)},
     )
     assert_ok(rv)
-    bgcompute_update_cvr_file()
+    bgcompute_update_cvr_file(election_id)
 
 
 def test_ballot_comparison_container_manifest(
@@ -128,6 +140,7 @@ def test_ballot_comparison_container_manifest(
             {
                 "id": str(uuid.uuid4()),
                 "name": "Contest 1",
+                "numWinners": 1,
                 "jurisdictionIds": jurisdiction_ids[:2],
                 "isTargeted": True,
             },
@@ -156,7 +169,9 @@ def test_ballot_comparison_container_manifest(
     round_1_id = json.loads(rv.data)["rounds"][0]["id"]
 
     # JAs create audit boards
-    set_logged_in_user(client, UserType.JURISDICTION_ADMIN, DEFAULT_JA_EMAIL)
+    set_logged_in_user(
+        client, UserType.JURISDICTION_ADMIN, default_ja_email(election_id)
+    )
     for jurisdiction_id in jurisdiction_ids[:2]:
         rv = post_json(
             client,
@@ -193,6 +208,11 @@ def test_ballot_comparison_container_manifest(
             f"/api/election/{election_id}/jurisdiction/{jurisdiction_ids[0]}/round/{round_1_id}/audit-board/{audit_board['id']}/ballots"
         )
         ballots = json.loads(rv.data)["ballots"]
+
+        # Ensure sorted by container
+        containers = [ballot["batch"]["container"] for ballot in ballots]
+        assert containers == sorted(containers)
+
         for ballot in ballots:
             audit_boards_by_container[ballot["batch"]["container"]].add(
                 audit_board["id"]
@@ -203,7 +223,9 @@ def test_ballot_comparison_container_manifest(
         ), "Different audit boards assigned ballots from the same container"
 
     # Check that the second jurisdiction's audit boards have ballots divvied up by tabulator+batch name
-    set_logged_in_user(client, UserType.JURISDICTION_ADMIN, DEFAULT_JA_EMAIL)
+    set_logged_in_user(
+        client, UserType.JURISDICTION_ADMIN, default_ja_email(election_id)
+    )
     rv = client.get(
         f"/api/election/{election_id}/jurisdiction/{jurisdiction_ids[1]}/round/{round_1_id}/audit-board"
     )
@@ -225,6 +247,20 @@ def test_ballot_comparison_container_manifest(
             len(audit_board_ids) == 1
         ), "Different audit boards assigned ballots from the same tabulator+name"
 
+    # Check that ballots are ordered by audit board then container for JA
+    set_logged_in_user(
+        client, UserType.JURISDICTION_ADMIN, default_ja_email(election_id)
+    )
+    rv = client.get(
+        f"/api/election/{election_id}/jurisdiction/{jurisdiction_ids[0]}/round/{round_1_id}/ballots"
+    )
+    ballots = json.loads(rv.data)["ballots"]
+    audit_boards_and_containers = [
+        (ballot["auditBoard"]["name"], ballot["batch"]["container"])
+        for ballot in ballots
+    ]
+    assert audit_boards_and_containers == sorted(audit_boards_and_containers)
+
     # Check that Container is included in the audit report
     set_logged_in_user(client, UserType.AUDIT_ADMIN, DEFAULT_AA_EMAIL)
     rv = client.get(f"/api/election/{election_id}/report")
@@ -236,7 +272,9 @@ def test_ballot_comparison_manifest_missing_tabulator(
     election_id: str,
     jurisdiction_ids: List[str],  # pylint: disable=unused-argument
 ):
-    set_logged_in_user(client, UserType.JURISDICTION_ADMIN, DEFAULT_JA_EMAIL)
+    set_logged_in_user(
+        client, UserType.JURISDICTION_ADMIN, default_ja_email(election_id)
+    )
     rv = client.put(
         f"/api/election/{election_id}/jurisdiction/{jurisdiction_ids[0]}/ballot-manifest",
         data={
@@ -258,7 +296,7 @@ def test_ballot_comparison_manifest_missing_tabulator(
     )
     assert_ok(rv)
 
-    bgcompute_update_ballot_manifest_file()
+    bgcompute_update_ballot_manifest_file(election_id)
 
     rv = client.get(
         f"/api/election/{election_id}/jurisdiction/{jurisdiction_ids[0]}/ballot-manifest",

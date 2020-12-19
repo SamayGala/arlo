@@ -9,7 +9,7 @@ import H2Title from '../../../Atoms/H2Title'
 import useAuditSettings from '../../useAuditSettings'
 import useContests from '../../useContests'
 import { IContest, ISampleSizeOption } from '../../../../types'
-import useJurisdictions, { FileProcessingStatus } from '../../useJurisdictions'
+import useJurisdictions from '../../useJurisdictions'
 import { testNumber } from '../../../utilities'
 import FormSection, {
   FormSectionDescription,
@@ -17,11 +17,15 @@ import FormSection, {
 import ContestsTable from './ContestsTable'
 import SettingsTable from './SettingsTable'
 import { isSetupComplete } from '../../StatusBox'
-import useJurisdictionFile from '../Participants/useJurisdictionFile'
 import ConfirmLaunch from './ConfirmLaunch'
 import FormField from '../../../Atoms/Form/FormField'
 import ElevatedCard from '../../../Atoms/SpacedCard'
 import useSampleSizes, { IStringSampleSizeOption } from './useSampleSizes'
+import {
+  useJurisdictionsFile,
+  isFileProcessed,
+  useStandardizedContestsFile,
+} from '../../useCSV'
 
 const percentFormatter = new Intl.NumberFormat(undefined, {
   style: 'percent',
@@ -41,7 +45,11 @@ const Review: React.FC<IProps> = ({ prevStage, locked, refresh }: IProps) => {
   const { electionId } = useParams<{ electionId: string }>()
   const [auditSettings] = useAuditSettings(electionId)
   const jurisdictions = useJurisdictions(electionId)
-  const [jurisdictionFile] = useJurisdictionFile(electionId)
+  const [jurisdictionsFile] = useJurisdictionsFile(electionId)
+  const [standardizedContestsFile] = useStandardizedContestsFile(
+    electionId,
+    auditSettings
+  )
   const [contests] = useContests(electionId)
   const history = useHistory()
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false)
@@ -108,15 +116,16 @@ const Review: React.FC<IProps> = ({ prevStage, locked, refresh }: IProps) => {
       ),
     }))
 
-  const initialValues: IFormOptions = sampleSizeOptions
-    ? Object.keys(sampleSizeOptions).reduce(
-        (a, contestId) => ({
-          ...a,
-          [contestId]: sampleSizeOptions[contestId][0],
-        }),
-        {}
-      )
-    : {}
+  const initialValues: IFormOptions =
+    sampleSizeOptions && !locked
+      ? Object.keys(sampleSizeOptions).reduce(
+          (a, contestId) => ({
+            ...a,
+            [contestId]: sampleSizeOptions[contestId][0],
+          }),
+          {}
+        )
+      : {}
 
   const participatingJurisdictions = contests
     ? jurisdictions.filter(({ id }) =>
@@ -124,10 +133,8 @@ const Review: React.FC<IProps> = ({ prevStage, locked, refresh }: IProps) => {
       )
     : []
 
-  const numManifestUploadsComplete = participatingJurisdictions.filter(
-    j =>
-      j.ballotManifest.processing &&
-      j.ballotManifest.processing.status === FileProcessingStatus.PROCESSED
+  const numManifestUploadsComplete = participatingJurisdictions.filter(j =>
+    isFileProcessed(j.ballotManifest)
   ).length
 
   return (
@@ -161,7 +168,7 @@ const Review: React.FC<IProps> = ({ prevStage, locked, refresh }: IProps) => {
             </tr>
             <tr>
               <td>Risk Limit:</td>
-              <td>{riskLimit}</td>
+              <td>{riskLimit && `${riskLimit}%`}</td>
             </tr>
             <tr>
               <td>Random Seed:</td>
@@ -175,12 +182,28 @@ const Review: React.FC<IProps> = ({ prevStage, locked, refresh }: IProps) => {
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  {jurisdictionFile && jurisdictionFile.file
-                    ? jurisdictionFile.file.name
+                  {jurisdictionsFile && jurisdictionsFile.file
+                    ? jurisdictionsFile.file.name
                     : ''}
                 </a>
               </td>
             </tr>
+            {auditType === 'BALLOT_COMPARISON' && (
+              <tr>
+                <td>Standardized Contests:</td>
+                <td>
+                  <a
+                    href={`/api/election/${electionId}/standardized-contests/file/csv`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    {standardizedContestsFile && standardizedContestsFile.file
+                      ? standardizedContestsFile.file.name
+                      : ''}
+                  </a>
+                </td>
+              </tr>
+            )}
             <tr>
               <td>Audit Board Data Entry:</td>
               <td>{online ? 'Online' : 'Offline'}</td>

@@ -2,17 +2,14 @@ import React, { ReactElement } from 'react'
 import { useParams } from 'react-router-dom'
 import styled from 'styled-components'
 import { Callout, H4, Button } from '@blueprintjs/core'
-import {
-  IJurisdiction,
-  FileProcessingStatus,
-  JurisdictionRoundStatus,
-  IFileInfo,
-} from '../useJurisdictions'
+import { IJurisdiction, JurisdictionRoundStatus } from '../useJurisdictions'
+import { FileProcessingStatus, IFileInfo } from '../useCSV'
 import { api, apiDownload } from '../../utilities'
 import { Inner } from '../../Atoms/Wrapper'
-import { IAuditSettings, IContest } from '../../../types'
+import { IContest } from '../../../types'
 import { IAuditBoard } from '../useAuditBoards'
 import { IRound } from '../useRoundsAuditAdmin'
+import { IAuditSettings } from '../useAuditSettings'
 
 const Wrapper = styled(Callout)`
   display: flex;

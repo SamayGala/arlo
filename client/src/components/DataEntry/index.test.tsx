@@ -35,7 +35,10 @@ const renderBallot = () =>
 const apiCalls = {
   getAuditBoard: {
     url: '/api/me',
-    response: { type: 'AUDIT_BOARD', ...dummyBoards()[0] },
+    response: {
+      user: { type: 'AUDIT_BOARD', ...dummyBoards()[0] },
+      superadminUser: null,
+    },
   },
   putAuditBoardMembers: {
     url:
@@ -92,7 +95,7 @@ describe('DataEntry', () => {
       const expectedCalls = [
         {
           ...apiCalls.getAuditBoard,
-          response: { type: 'AUDIT_BOARD', ...dummyBoards()[1] }, // No members set
+          response: { user: { type: 'AUDIT_BOARD', ...dummyBoards()[1] } }, // No members set
         },
         apiCalls.putAuditBoardMembers,
         apiCalls.getAuditBoard,
@@ -353,6 +356,73 @@ describe('DataEntry', () => {
         userEvent.click(screen.getByRole('button', { name: 'Review' }))
         userEvent.click(
           await screen.findByRole('button', { name: 'Submit & Next Ballot' })
+        )
+        await screen.findByText('Auditing ballot 3 of 27')
+      })
+    })
+
+    it('hides contests not on ballot for ballot comparison audits', async () => {
+      const expectedCalls = [
+        apiCalls.getAuditBoard,
+        apiCalls.getContests,
+        {
+          url:
+            '/api/election/1/jurisdiction/jurisdiction-1/round/round-1/audit-board/audit-board-1/ballots',
+          response: {
+            ballots: dummyBallots.ballots.map(b => ({
+              ...b,
+              imprintedId: `${b.batch.name}-${b.position}`,
+              contestsOnBallot: ['contest-id-2'],
+            })),
+          },
+        },
+        apiCalls.putAuditBallot('ballot-id-2', {
+          status: 'AUDITED',
+          interpretations: [
+            // We should still record CONTEST_NOT_ON_BALLOT for hidden contests
+            {
+              contestId: 'contest-id-1',
+              interpretation: 'CONTEST_NOT_ON_BALLOT',
+              choiceIds: [],
+              comment: null,
+            },
+            {
+              contestId: 'contest-id-2',
+              interpretation: 'VOTE',
+              choiceIds: ['choice-id-3'],
+              comment: null,
+            },
+          ],
+        }),
+        apiCalls.getBallotsOneAudited,
+      ]
+      await withMockFetch(expectedCalls, async () => {
+        renderBallot()
+
+        await screen.findByRole('heading', {
+          name: 'Audit Board #1: Ballot Card Data Entry',
+        })
+
+        // Contest 1 should be hidden
+        expect(
+          screen.queryByRole('heading', { name: 'Contest 1' })
+        ).not.toBeInTheDocument()
+        screen.getByRole('heading', { name: 'Contest 2' })
+        userEvent.click(screen.getByRole('checkbox', { name: 'Choice Three' }))
+
+        // Review the choices
+        userEvent.click(screen.getByRole('button', { name: 'Review' }))
+        expect(
+          screen.queryByRole('heading', { name: 'Contest 1' })
+        ).not.toBeInTheDocument()
+        screen.getByRole('heading', { name: 'Contest 2' })
+        expect(
+          await screen.findByRole('button', { name: 'Choice Three' })
+        ).toBeDisabled()
+
+        // Submit the ballot
+        userEvent.click(
+          screen.getByRole('button', { name: 'Submit & Next Ballot' })
         )
         await screen.findByText('Auditing ballot 3 of 27')
       })

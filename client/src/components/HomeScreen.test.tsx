@@ -3,71 +3,12 @@ import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { withMockFetch, renderWithRouter } from './testUtilities'
 import App from '../App'
-import { aaApiCalls, jaApiCalls } from './MultiJurisdictionAudit/_mocks'
+import {
+  aaApiCalls,
+  jaApiCalls,
+  apiCalls,
+} from './MultiJurisdictionAudit/_mocks'
 import { auditSettings } from './MultiJurisdictionAudit/useSetupMenuItems/_mocks'
-
-const apiCalls = {
-  unauthenticatedUser: {
-    url: '/api/me',
-    response: null,
-  },
-  postNewAudit: (body: {}) => ({
-    url: '/api/election',
-    options: {
-      method: 'POST',
-      body: JSON.stringify(body),
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    },
-    response: { electionId: '1' },
-  }),
-  getUserWithAudit: {
-    ...aaApiCalls.getUser,
-    response: {
-      ...aaApiCalls.getUser.response,
-      organizations: [
-        {
-          id: 'org-id',
-          name: 'State of California',
-          elections: [
-            {
-              id: '1',
-              auditName: 'November Presidential Election 2020',
-              electionName: '',
-              state: 'CA',
-            },
-          ],
-        },
-      ],
-    },
-  },
-  getUserMultipleOrgs: {
-    ...aaApiCalls.getUser,
-    response: {
-      ...aaApiCalls.getUser.response,
-      organizations: [
-        {
-          id: 'org-id',
-          name: 'State of California',
-          elections: [
-            {
-              id: '1',
-              auditName: 'November Presidential Election 2020',
-              electionName: '',
-              state: 'CA',
-            },
-          ],
-        },
-        {
-          id: 'org-id-2',
-          name: 'State of Georgia',
-          elections: [],
-        },
-      ],
-    },
-  },
-}
 
 const setupScreenCalls = [
   aaApiCalls.getRounds([]),
@@ -112,7 +53,7 @@ describe('Home screen', () => {
     const expectedCalls = [
       aaApiCalls.getUser,
       aaApiCalls.getUser, // Extra call to load the list of audits
-      apiCalls.postNewAudit({
+      aaApiCalls.postNewAudit({
         organizationId: 'org-id',
         auditName: 'November Presidential Election 2020',
         auditType: 'BATCH_COMPARISON',
@@ -124,10 +65,10 @@ describe('Home screen', () => {
       ...setupScreenCalls,
       aaApiCalls.getSettings(auditSettings.blank),
       aaApiCalls.getJurisdictionFile,
+      aaApiCalls.getJurisdictionFile,
       aaApiCalls.getRounds([]),
       ...setupScreenCalls,
-      aaApiCalls.getJurisdictionFile,
-      apiCalls.getUserWithAudit,
+      aaApiCalls.getUserWithAudit,
       ...setupScreenCalls,
       aaApiCalls.getJurisdictionFile,
       aaApiCalls.getRounds([]),
@@ -137,6 +78,7 @@ describe('Home screen', () => {
       aaApiCalls.getSettings(auditSettings.blank),
       ...setupScreenCalls,
       aaApiCalls.getJurisdictionFile,
+      ...setupScreenCalls,
     ]
     await withMockFetch(expectedCalls, async () => {
       const { history } = renderView('/')
@@ -172,7 +114,7 @@ describe('Home screen', () => {
       expect(history.location.pathname).toEqual('/election/1/setup')
 
       // Go back to the home screen
-      userEvent.click(screen.getByRole('link', { name: 'View Audits' }))
+      userEvent.click(screen.getByRole('button', { name: /View Audits/ }))
 
       // Click on the audit to go the setup screen
       userEvent.click(
@@ -182,14 +124,15 @@ describe('Home screen', () => {
       )
       await screen.findByText('The audit has not started.')
       expect(history.location.pathname).toEqual('/election/1/setup')
+      await screen.findByText('Current file:')
     })
   })
 
   it('shows a list of audits and create audit form for audit admins with multiple orgs', async () => {
     const expectedCalls = [
-      apiCalls.getUserMultipleOrgs,
-      apiCalls.getUserMultipleOrgs,
-      apiCalls.postNewAudit({
+      aaApiCalls.getUserMultipleOrgs,
+      aaApiCalls.getUserMultipleOrgs,
+      aaApiCalls.postNewAudit({
         organizationId: 'org-id-2',
         auditName: 'Presidential Primary',
         auditType: 'BALLOT_POLLING',
@@ -201,9 +144,9 @@ describe('Home screen', () => {
       ...setupScreenCalls,
       aaApiCalls.getSettings(auditSettings.blank),
       aaApiCalls.getJurisdictionFile,
+      aaApiCalls.getJurisdictionFile,
       aaApiCalls.getRounds([]),
       ...setupScreenCalls,
-      aaApiCalls.getJurisdictionFile,
     ]
     await withMockFetch(expectedCalls, async () => {
       renderView('/')
@@ -248,6 +191,7 @@ describe('Home screen', () => {
 
       // Should be on the setup screen
       await screen.findByText('The audit has not started.')
+      await screen.findByText('Current file:')
     })
   })
 

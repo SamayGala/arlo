@@ -25,6 +25,7 @@ def test_set_contest_metadata_from_cvrs(
             {
                 "id": contest_id,
                 "name": "Contest 2",
+                "numWinners": 1,
                 "jurisdictionIds": jurisdiction_ids[:2],
                 "isTargeted": True,
             }
@@ -35,7 +36,6 @@ def test_set_contest_metadata_from_cvrs(
     contest = Contest.query.get(contest_id)
     assert contest.total_ballots_cast is None
     assert contest.votes_allowed is None
-    assert contest.num_winners is None
     assert contest.choices == []
 
     set_contest_metadata_from_cvrs(contest)
@@ -44,7 +44,6 @@ def test_set_contest_metadata_from_cvrs(
         dict(
             total_ballots_cast=contest.total_ballots_cast,
             votes_allowed=contest.votes_allowed,
-            num_winners=contest.num_winners,
             choices=[
                 dict(name=choice.name, num_votes=choice.num_votes,)
                 for choice in contest.choices
@@ -70,6 +69,7 @@ def test_require_cvr_uploads(
             {
                 "id": str(uuid.uuid4()),
                 "name": "Contest 1",
+                "numWinners": 1,
                 "jurisdictionIds": jurisdiction_ids[:2],
                 "isTargeted": True,
             },
@@ -119,7 +119,7 @@ def test_ballot_comparison_two_rounds(
     )
     assert_ok(rv)
 
-    bgcompute_update_standardized_contests_file()
+    bgcompute_update_standardized_contests_file(election_id)
 
     # AA selects a contest to target from the standardized contest list
     rv = client.get(f"/api/election/{election_id}/standardized-contests")
@@ -134,12 +134,14 @@ def test_ballot_comparison_two_rounds(
             {
                 "id": str(uuid.uuid4()),
                 "name": target_contest["name"],
+                "numWinners": 1,
                 "jurisdictionIds": target_contest["jurisdictionIds"],
                 "isTargeted": True,
             },
             {
                 "id": str(uuid.uuid4()),
                 "name": opportunistic_contest["name"],
+                "numWinners": 1,
                 "jurisdictionIds": opportunistic_contest["jurisdictionIds"],
                 "isTargeted": False,
             },
@@ -176,7 +178,9 @@ def test_ballot_comparison_two_rounds(
     snapshot.assert_match(jurisdictions[1]["currentRoundStatus"])
 
     # JAs create audit boards
-    set_logged_in_user(client, UserType.JURISDICTION_ADMIN, DEFAULT_JA_EMAIL)
+    set_logged_in_user(
+        client, UserType.JURISDICTION_ADMIN, default_ja_email(election_id)
+    )
     for jurisdiction_id in target_contest["jurisdictionIds"]:
         rv = post_json(
             client,
@@ -392,9 +396,17 @@ def test_ballot_comparison_cvr_metadata(
         [
             {
                 "id": str(uuid.uuid4()),
-                "name": "Contest 1",
+                "name": "Contest 2",
+                "numWinners": 1,
                 "jurisdictionIds": jurisdiction_ids[:2],
                 "isTargeted": True,
+            },
+            {
+                "id": str(uuid.uuid4()),
+                "name": "Contest 1",
+                "numWinners": 1,
+                "jurisdictionIds": jurisdiction_ids[:2],
+                "isTargeted": False,
             },
         ],
     )
@@ -405,15 +417,10 @@ def test_ballot_comparison_cvr_metadata(
     contests = json.loads(rv.data)["contests"]
     target_contest_id = contests[0]["id"]
 
-    rv = client.get(f"/api/election/{election_id}/sample-sizes")
-    sample_size_options = json.loads(rv.data)["sampleSizes"]
-    assert len(sample_size_options) == 1
-    sample_size = sample_size_options[target_contest_id][0]
-
     rv = post_json(
         client,
         f"/api/election/{election_id}/round",
-        {"roundNum": 1, "sampleSizes": {target_contest_id: sample_size["size"]}},
+        {"roundNum": 1, "sampleSizes": {target_contest_id: 20}},
     )
     assert_ok(rv)
 
@@ -421,7 +428,9 @@ def test_ballot_comparison_cvr_metadata(
     round_1_id = json.loads(rv.data)["rounds"][0]["id"]
 
     # JA creates audit boards
-    set_logged_in_user(client, UserType.JURISDICTION_ADMIN, DEFAULT_JA_EMAIL)
+    set_logged_in_user(
+        client, UserType.JURISDICTION_ADMIN, default_ja_email(election_id)
+    )
     rv = post_json(
         client,
         f"/api/election/{election_id}/jurisdiction/{jurisdiction_ids[0]}/round/{round_1_id}/audit-board",
@@ -456,3 +465,7 @@ def test_ballot_comparison_cvr_metadata(
     assert ballots[0]["batch"]["tabulator"] == "TABULATOR1"
     assert ballots[0]["position"] == 1
     assert ballots[0]["imprintedId"] == "1-1-1"
+    assert ballots[0]["contestsOnBallot"] == [contests[0]["id"], contests[1]["id"]]
+
+    ballot_missing_contest = next(b for b in ballots if b["imprintedId"] == "2-2-4")
+    assert ballot_missing_contest["contestsOnBallot"] == [contests[0]["id"]]

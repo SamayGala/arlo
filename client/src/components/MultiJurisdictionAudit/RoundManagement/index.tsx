@@ -3,7 +3,6 @@ import { useParams } from 'react-router-dom'
 import styled from 'styled-components'
 import { ButtonGroup, Button, H2, H3 } from '@blueprintjs/core'
 import { Wrapper } from '../../Atoms/Wrapper'
-import { IAuditSettings } from '../../../types'
 import { apiDownload } from '../../utilities'
 import CreateAuditBoards from './CreateAuditBoards'
 import RoundProgress from './RoundProgress'
@@ -17,10 +16,11 @@ import QRs from './QRs'
 import RoundDataEntry from './RoundDataEntry'
 import useAuditSettingsJurisdictionAdmin from './useAuditSettingsJurisdictionAdmin'
 import BatchRoundDataEntry from './BatchRoundDataEntry'
-import { useAuthDataContext } from '../../UserContext'
+import { useAuthDataContext, IJurisdictionAdmin } from '../../UserContext'
 import useBallots, { IBallot } from './useBallots'
 import { IRound } from '../useRoundsAuditAdmin'
 import OfflineBatchRoundDataEntry from './OfflineBatchRoundDataEntry'
+import { IAuditSettings } from '../useAuditSettings'
 
 const PaddedWrapper = styled(Wrapper)`
   flex-direction: column;
@@ -53,16 +53,18 @@ const RoundManagement = ({
     electionId: string
     jurisdictionId: string
   }>()
-  const { meta } = useAuthDataContext()
+  const auth = useAuthDataContext()
   const ballots = useBallots(electionId, jurisdictionId, round.id, auditBoards)
   const auditSettings = useAuditSettingsJurisdictionAdmin(
     electionId,
     jurisdictionId
   )
 
-  if (!meta || !ballots || !auditSettings) return null // Still loading
+  if (!auth || !auth.user || !ballots || !auditSettings) return null // Still loading
 
-  const jurisdiction = meta.jurisdictions.find(j => j.id === jurisdictionId)!
+  const jurisdiction = (auth.user as IJurisdictionAdmin).jurisdictions.find(
+    j => j.id === jurisdictionId
+  )!
   const { roundNum } = round
 
   if (round.isAuditComplete) {

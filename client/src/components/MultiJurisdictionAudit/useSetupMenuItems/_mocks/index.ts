@@ -1,15 +1,15 @@
 import { readFileSync } from 'fs'
 import { join } from 'path'
-import { IAuditSettings, IContest } from '../../../../types'
+import { IContest } from '../../../../types'
 import {
   IJurisdiction,
-  FileProcessingStatus,
-  IFileInfo,
   JurisdictionRoundStatus,
   IBallotManifestInfo,
 } from '../../useJurisdictions' // uses IFileInfo instead of IBallotManifest and allows `file: null`
 import { IAuditBoard } from '../../useAuditBoards'
 import { IRound } from '../../useRoundsAuditAdmin'
+import { IAuditSettings } from '../../useAuditSettings'
+import { FileProcessingStatus, IFileInfo } from '../../useCSV'
 
 export const manifestFile = new File(
   [readFileSync(join(__dirname, './test_manifest.csv'), 'utf8')],
@@ -21,16 +21,14 @@ export const talliesFile = new File(
   'tallies.csv',
   { type: 'text/csv' }
 )
+export const cvrsFile = new File(
+  [readFileSync(join(__dirname, './test_cvrs.csv'), 'utf8')],
+  'cvrs.csv',
+  { type: 'text/csv' }
+)
 
 export const auditSettings: {
-  [key in
-    | 'blank'
-    | 'blankBatch'
-    | 'onlyState'
-    | 'otherSettings'
-    | 'all'
-    | 'offlineAll'
-    | 'batchComparisonAll']: IAuditSettings
+  [key: string]: IAuditSettings
 } = {
   blank: {
     state: null,
@@ -49,7 +47,17 @@ export const auditSettings: {
     randomSeed: null,
     riskLimit: null,
     auditType: 'BATCH_COMPARISON',
-    auditMathType: 'BRAVO',
+    auditMathType: 'MACRO',
+    auditName: 'Test Audit',
+  },
+  blankBallotComparison: {
+    state: null,
+    electionName: null,
+    online: null,
+    randomSeed: null,
+    riskLimit: null,
+    auditType: 'BALLOT_COMPARISON',
+    auditMathType: 'SUPERSIMPLE',
     auditName: 'Test Audit',
   },
   onlyState: {
@@ -99,7 +107,17 @@ export const auditSettings: {
     randomSeed: '12345',
     riskLimit: 10,
     auditType: 'BATCH_COMPARISON',
-    auditMathType: 'BRAVO',
+    auditMathType: 'MACRO',
+    auditName: 'Test Audit',
+  },
+  ballotComparisonAll: {
+    state: 'AL',
+    electionName: 'Election Name',
+    online: false,
+    randomSeed: '12345',
+    riskLimit: 10,
+    auditType: 'BALLOT_COMPARISON',
+    auditMathType: 'SUPERSIMPLE',
     auditName: 'Test Audit',
   },
 }
@@ -203,11 +221,11 @@ export const talliesMocks: { [key: string]: IFileInfo } = {
     processing: null,
   },
   processed: {
-    file: { name: 'tallies.csv', uploadedAt: '2020-06-08T21:39:05.765+00:00' },
+    file: { name: 'tallies.csv', uploadedAt: '2020-07-08T21:39:05.765+00:00' },
     processing: {
       status: FileProcessingStatus.PROCESSED,
-      startedAt: '2020-06-08T21:39:05.765+00:00',
-      completedAt: '2020-06-08T21:39:14.574+00:00',
+      startedAt: '2020-07-08T21:39:05.765+00:00',
+      completedAt: '2020-07-08T21:39:14.574+00:00',
       error: null,
     },
   },

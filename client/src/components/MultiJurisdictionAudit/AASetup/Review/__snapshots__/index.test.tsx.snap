@@ -4,7 +4,7 @@ exports[`Audit Setup > Review & Launch renders despite missing jurisdictions on 
 <div>
   <div>
     <h2
-      class="bp3-heading sc-bdVaJa ibVpPq"
+      class="bp3-heading sc-ifAKCX cmZyyF"
     >
       Review & Launch
     </h2>
@@ -39,10 +39,10 @@ exports[`Audit Setup > Review & Launch renders despite missing jurisdictions on 
       Audit Settings
     </h4>
     <div
-      class="bp3-card bp3-elevation-2 sc-ckVGcZ kiOdNq"
+      class="bp3-card bp3-elevation-2 sc-dxgOiQ jDdoJq"
     >
       <table
-        class="sc-kEYyzF knqkQg"
+        class="sc-hMqMXs kgAdZo"
       >
         <tbody>
           <tr>
@@ -66,7 +66,7 @@ exports[`Audit Setup > Review & Launch renders despite missing jurisdictions on 
               Risk Limit:
             </td>
             <td>
-              10
+              10%
             </td>
           </tr>
           <tr>
@@ -86,7 +86,9 @@ exports[`Audit Setup > Review & Launch renders despite missing jurisdictions on 
                 href="/api/election/1/jurisdiction/file/csv"
                 rel="noopener noreferrer"
                 target="_blank"
-              />
+              >
+                jurisdictions.csv
+              </a>
             </td>
           </tr>
           <tr>
@@ -100,7 +102,7 @@ exports[`Audit Setup > Review & Launch renders despite missing jurisdictions on 
         </tbody>
       </table>
       <table
-        class="sc-hMqMXs fRxVKz"
+        class="sc-eNQAEJ jcIdqs"
       >
         <thead>
           <tr>
@@ -115,7 +117,7 @@ exports[`Audit Setup > Review & Launch renders despite missing jurisdictions on 
         <tbody />
       </table>
       <table
-        class="sc-hMqMXs fRxVKz"
+        class="sc-eNQAEJ jcIdqs"
       >
         <thead>
           <tr>
@@ -158,10 +160,10 @@ exports[`Audit Setup > Review & Launch renders despite missing jurisdictions on 
         </a>
       </p>
       <div
-        class="sc-htpNat gtULUV"
+        class="sc-bdVaJa kcYonD"
       >
         <button
-          class="bp3-button sc-EHOje gmpgQN"
+          class="bp3-button sc-bxivhb WkpPV"
           type="button"
         >
           <span
@@ -171,7 +173,7 @@ exports[`Audit Setup > Review & Launch renders despite missing jurisdictions on 
           </span>
         </button>
         <button
-          class="bp3-button bp3-disabled bp3-intent-primary sc-EHOje gmpgQN"
+          class="bp3-button bp3-disabled bp3-intent-primary sc-bxivhb WkpPV"
           disabled=""
           tabindex="-1"
           type="button"
@@ -192,7 +194,7 @@ exports[`Audit Setup > Review & Launch renders despite missing jurisdictions on 
 <div>
   <div>
     <h2
-      class="bp3-heading sc-bdVaJa ibVpPq"
+      class="bp3-heading sc-ifAKCX cmZyyF"
     >
       Review & Launch
     </h2>
@@ -227,10 +229,10 @@ exports[`Audit Setup > Review & Launch renders despite missing jurisdictions on 
       Audit Settings
     </h4>
     <div
-      class="bp3-card bp3-elevation-2 sc-ckVGcZ kiOdNq"
+      class="bp3-card bp3-elevation-2 sc-dxgOiQ jDdoJq"
     >
       <table
-        class="sc-kEYyzF knqkQg"
+        class="sc-hMqMXs kgAdZo"
       >
         <tbody>
           <tr>
@@ -254,7 +256,7 @@ exports[`Audit Setup > Review & Launch renders despite missing jurisdictions on 
               Risk Limit:
             </td>
             <td>
-              10
+              10%
             </td>
           </tr>
           <tr>
@@ -274,7 +276,9 @@ exports[`Audit Setup > Review & Launch renders despite missing jurisdictions on 
                 href="/api/election/1/jurisdiction/file/csv"
                 rel="noopener noreferrer"
                 target="_blank"
-              />
+              >
+                jurisdictions.csv
+              </a>
             </td>
           </tr>
           <tr>
@@ -288,7 +292,7 @@ exports[`Audit Setup > Review & Launch renders despite missing jurisdictions on 
         </tbody>
       </table>
       <table
-        class="sc-hMqMXs fRxVKz"
+        class="sc-eNQAEJ jcIdqs"
       >
         <thead>
           <tr>
@@ -312,7 +316,7 @@ exports[`Audit Setup > Review & Launch renders despite missing jurisdictions on 
         </tbody>
       </table>
       <table
-        class="sc-hMqMXs fRxVKz"
+        class="sc-eNQAEJ jcIdqs"
       >
         <thead>
           <tr>
@@ -346,10 +350,10 @@ exports[`Audit Setup > Review & Launch renders despite missing jurisdictions on 
         </a>
       </p>
       <div
-        class="sc-htpNat gtULUV"
+        class="sc-bdVaJa kcYonD"
       >
         <button
-          class="bp3-button sc-EHOje gmpgQN"
+          class="bp3-button sc-bxivhb WkpPV"
           type="button"
         >
           <span
@@ -359,7 +363,7 @@ exports[`Audit Setup > Review & Launch renders despite missing jurisdictions on 
           </span>
         </button>
         <button
-          class="bp3-button bp3-disabled bp3-intent-primary sc-EHOje gmpgQN"
+          class="bp3-button bp3-disabled bp3-intent-primary sc-bxivhb WkpPV"
           disabled=""
           tabindex="-1"
           type="button"
@@ -380,7 +384,7 @@ exports[`Audit Setup > Review & Launch renders empty state 1`] = `
 <div>
   <div>
     <h2
-      class="bp3-heading sc-bdVaJa ibVpPq"
+      class="bp3-heading sc-ifAKCX cmZyyF"
     >
       Review & Launch
     </h2>
@@ -415,10 +419,10 @@ exports[`Audit Setup > Review & Launch renders empty state 1`] = `
       Audit Settings
     </h4>
     <div
-      class="bp3-card bp3-elevation-2 sc-ckVGcZ kiOdNq"
+      class="bp3-card bp3-elevation-2 sc-dxgOiQ jDdoJq"
     >
       <table
-        class="sc-kEYyzF knqkQg"
+        class="sc-hMqMXs kgAdZo"
       >
         <tbody>
           <tr>
@@ -442,7 +446,7 @@ exports[`Audit Setup > Review & Launch renders empty state 1`] = `
               Risk Limit:
             </td>
             <td>
-              10
+              10%
             </td>
           </tr>
           <tr>
@@ -462,7 +466,9 @@ exports[`Audit Setup > Review & Launch renders empty state 1`] = `
                 href="/api/election/1/jurisdiction/file/csv"
                 rel="noopener noreferrer"
                 target="_blank"
-              />
+              >
+                jurisdictions.csv
+              </a>
             </td>
           </tr>
           <tr>
@@ -476,7 +482,7 @@ exports[`Audit Setup > Review & Launch renders empty state 1`] = `
         </tbody>
       </table>
       <table
-        class="sc-hMqMXs fRxVKz"
+        class="sc-eNQAEJ jcIdqs"
       >
         <thead>
           <tr>
@@ -500,7 +506,7 @@ exports[`Audit Setup > Review & Launch renders empty state 1`] = `
         </tbody>
       </table>
       <table
-        class="sc-hMqMXs fRxVKz"
+        class="sc-eNQAEJ jcIdqs"
       >
         <thead>
           <tr>
@@ -525,7 +531,7 @@ exports[`Audit Setup > Review & Launch renders empty state 1`] = `
       data-testid="sample-size-form"
     >
       <div
-        class="sc-htoDjs dVdNvH"
+        class="sc-htoDjs jcQPAQ"
       >
         <div
           class="sc-dnqmqq kGMqKN"
@@ -533,7 +539,7 @@ exports[`Audit Setup > Review & Launch renders empty state 1`] = `
           Choose the initial sample size for each contest you would like to use for Round 1 of the audit from the options below.
         </div>
         <div
-          class="bp3-card bp3-elevation-2 sc-ckVGcZ kiOdNq"
+          class="bp3-card bp3-elevation-2 sc-dxgOiQ jDdoJq"
         >
           <div
             class="sc-dnqmqq kGMqKN"
@@ -623,10 +629,10 @@ exports[`Audit Setup > Review & Launch renders empty state 1`] = `
         </div>
       </div>
       <div
-        class="sc-htpNat gtULUV"
+        class="sc-bdVaJa kcYonD"
       >
         <button
-          class="bp3-button sc-EHOje gmpgQN"
+          class="bp3-button sc-bxivhb WkpPV"
           type="button"
         >
           <span
@@ -636,7 +642,7 @@ exports[`Audit Setup > Review & Launch renders empty state 1`] = `
           </span>
         </button>
         <button
-          class="bp3-button bp3-intent-primary sc-EHOje gmpgQN"
+          class="bp3-button bp3-intent-primary sc-bxivhb WkpPV"
           type="button"
         >
           <span
@@ -655,7 +661,7 @@ exports[`Audit Setup > Review & Launch renders full state 1`] = `
 <div>
   <div>
     <h2
-      class="bp3-heading sc-bdVaJa ibVpPq"
+      class="bp3-heading sc-ifAKCX cmZyyF"
     >
       Review & Launch
     </h2>
@@ -690,10 +696,10 @@ exports[`Audit Setup > Review & Launch renders full state 1`] = `
       Audit Settings
     </h4>
     <div
-      class="bp3-card bp3-elevation-2 sc-ckVGcZ kiOdNq"
+      class="bp3-card bp3-elevation-2 sc-dxgOiQ jDdoJq"
     >
       <table
-        class="sc-kEYyzF knqkQg"
+        class="sc-hMqMXs kgAdZo"
       >
         <tbody>
           <tr>
@@ -717,7 +723,7 @@ exports[`Audit Setup > Review & Launch renders full state 1`] = `
               Risk Limit:
             </td>
             <td>
-              10
+              10%
             </td>
           </tr>
           <tr>
@@ -737,7 +743,9 @@ exports[`Audit Setup > Review & Launch renders full state 1`] = `
                 href="/api/election/1/jurisdiction/file/csv"
                 rel="noopener noreferrer"
                 target="_blank"
-              />
+              >
+                jurisdictions.csv
+              </a>
             </td>
           </tr>
           <tr>
@@ -751,7 +759,7 @@ exports[`Audit Setup > Review & Launch renders full state 1`] = `
         </tbody>
       </table>
       <table
-        class="sc-hMqMXs fRxVKz"
+        class="sc-eNQAEJ jcIdqs"
       >
         <thead>
           <tr>
@@ -775,7 +783,7 @@ exports[`Audit Setup > Review & Launch renders full state 1`] = `
         </tbody>
       </table>
       <table
-        class="sc-hMqMXs fRxVKz"
+        class="sc-eNQAEJ jcIdqs"
       >
         <thead>
           <tr>
@@ -800,7 +808,7 @@ exports[`Audit Setup > Review & Launch renders full state 1`] = `
       data-testid="sample-size-form"
     >
       <div
-        class="sc-htoDjs dVdNvH"
+        class="sc-htoDjs jcQPAQ"
       >
         <div
           class="sc-dnqmqq kGMqKN"
@@ -808,7 +816,7 @@ exports[`Audit Setup > Review & Launch renders full state 1`] = `
           Choose the initial sample size for each contest you would like to use for Round 1 of the audit from the options below.
         </div>
         <div
-          class="bp3-card bp3-elevation-2 sc-ckVGcZ kiOdNq"
+          class="bp3-card bp3-elevation-2 sc-dxgOiQ jDdoJq"
         >
           <div
             class="sc-dnqmqq kGMqKN"
@@ -898,10 +906,10 @@ exports[`Audit Setup > Review & Launch renders full state 1`] = `
         </div>
       </div>
       <div
-        class="sc-htpNat gtULUV"
+        class="sc-bdVaJa kcYonD"
       >
         <button
-          class="bp3-button sc-EHOje gmpgQN"
+          class="bp3-button sc-bxivhb WkpPV"
           type="button"
         >
           <span
@@ -911,7 +919,7 @@ exports[`Audit Setup > Review & Launch renders full state 1`] = `
           </span>
         </button>
         <button
-          class="bp3-button bp3-intent-primary sc-EHOje gmpgQN"
+          class="bp3-button bp3-intent-primary sc-bxivhb WkpPV"
           type="button"
         >
           <span
@@ -930,7 +938,7 @@ exports[`Audit Setup > Review & Launch renders full state with batch comparison 
 <div>
   <div>
     <h2
-      class="bp3-heading sc-bdVaJa ibVpPq"
+      class="bp3-heading sc-ifAKCX cmZyyF"
     >
       Review & Launch
     </h2>
@@ -965,10 +973,10 @@ exports[`Audit Setup > Review & Launch renders full state with batch comparison 
       Audit Settings
     </h4>
     <div
-      class="bp3-card bp3-elevation-2 sc-ckVGcZ kiOdNq"
+      class="bp3-card bp3-elevation-2 sc-dxgOiQ jDdoJq"
     >
       <table
-        class="sc-kEYyzF knqkQg"
+        class="sc-hMqMXs kgAdZo"
       >
         <tbody>
           <tr>
@@ -992,7 +1000,7 @@ exports[`Audit Setup > Review & Launch renders full state with batch comparison 
               Risk Limit:
             </td>
             <td>
-              10
+              10%
             </td>
           </tr>
           <tr>
@@ -1012,7 +1020,9 @@ exports[`Audit Setup > Review & Launch renders full state with batch comparison 
                 href="/api/election/1/jurisdiction/file/csv"
                 rel="noopener noreferrer"
                 target="_blank"
-              />
+              >
+                jurisdictions.csv
+              </a>
             </td>
           </tr>
           <tr>
@@ -1026,7 +1036,7 @@ exports[`Audit Setup > Review & Launch renders full state with batch comparison 
         </tbody>
       </table>
       <table
-        class="sc-hMqMXs fRxVKz"
+        class="sc-eNQAEJ jcIdqs"
       >
         <thead>
           <tr>
@@ -1050,7 +1060,7 @@ exports[`Audit Setup > Review & Launch renders full state with batch comparison 
         </tbody>
       </table>
       <table
-        class="sc-hMqMXs fRxVKz"
+        class="sc-eNQAEJ jcIdqs"
       >
         <thead>
           <tr>
@@ -1075,7 +1085,7 @@ exports[`Audit Setup > Review & Launch renders full state with batch comparison 
       data-testid="sample-size-form"
     >
       <div
-        class="sc-htoDjs dVdNvH"
+        class="sc-htoDjs jcQPAQ"
       >
         <div
           class="sc-dnqmqq kGMqKN"
@@ -1083,7 +1093,7 @@ exports[`Audit Setup > Review & Launch renders full state with batch comparison 
           Choose the initial sample size for each contest you would like to use for Round 1 of the audit from the options below.
         </div>
         <div
-          class="bp3-card bp3-elevation-2 sc-ckVGcZ kiOdNq"
+          class="bp3-card bp3-elevation-2 sc-dxgOiQ jDdoJq"
         >
           <div
             class="sc-dnqmqq kGMqKN"
@@ -1173,10 +1183,10 @@ exports[`Audit Setup > Review & Launch renders full state with batch comparison 
         </div>
       </div>
       <div
-        class="sc-htpNat gtULUV"
+        class="sc-bdVaJa kcYonD"
       >
         <button
-          class="bp3-button sc-EHOje gmpgQN"
+          class="bp3-button sc-bxivhb WkpPV"
           type="button"
         >
           <span
@@ -1186,7 +1196,7 @@ exports[`Audit Setup > Review & Launch renders full state with batch comparison 
           </span>
         </button>
         <button
-          class="bp3-button bp3-intent-primary sc-EHOje gmpgQN"
+          class="bp3-button bp3-intent-primary sc-bxivhb WkpPV"
           type="button"
         >
           <span
@@ -1205,7 +1215,7 @@ exports[`Audit Setup > Review & Launch renders full state with batch comparison 
 <div>
   <div>
     <h2
-      class="bp3-heading sc-bdVaJa ibVpPq"
+      class="bp3-heading sc-ifAKCX cmZyyF"
     >
       Review & Launch
     </h2>
@@ -1240,10 +1250,10 @@ exports[`Audit Setup > Review & Launch renders full state with batch comparison 
       Audit Settings
     </h4>
     <div
-      class="bp3-card bp3-elevation-2 sc-ckVGcZ kiOdNq"
+      class="bp3-card bp3-elevation-2 sc-dxgOiQ jDdoJq"
     >
       <table
-        class="sc-kEYyzF knqkQg"
+        class="sc-hMqMXs kgAdZo"
       >
         <tbody>
           <tr>
@@ -1267,7 +1277,7 @@ exports[`Audit Setup > Review & Launch renders full state with batch comparison 
               Risk Limit:
             </td>
             <td>
-              10
+              10%
             </td>
           </tr>
           <tr>
@@ -1287,7 +1297,9 @@ exports[`Audit Setup > Review & Launch renders full state with batch comparison 
                 href="/api/election/1/jurisdiction/file/csv"
                 rel="noopener noreferrer"
                 target="_blank"
-              />
+              >
+                jurisdictions.csv
+              </a>
             </td>
           </tr>
           <tr>
@@ -1301,7 +1313,7 @@ exports[`Audit Setup > Review & Launch renders full state with batch comparison 
         </tbody>
       </table>
       <table
-        class="sc-hMqMXs fRxVKz"
+        class="sc-eNQAEJ jcIdqs"
       >
         <thead>
           <tr>
@@ -1325,7 +1337,7 @@ exports[`Audit Setup > Review & Launch renders full state with batch comparison 
         </tbody>
       </table>
       <table
-        class="sc-hMqMXs fRxVKz"
+        class="sc-eNQAEJ jcIdqs"
       >
         <thead>
           <tr>
@@ -1359,10 +1371,10 @@ exports[`Audit Setup > Review & Launch renders full state with batch comparison 
         </a>
       </p>
       <div
-        class="sc-htpNat gtULUV"
+        class="sc-bdVaJa kcYonD"
       >
         <button
-          class="bp3-button sc-EHOje gmpgQN"
+          class="bp3-button sc-bxivhb WkpPV"
           type="button"
         >
           <span
@@ -1372,7 +1384,7 @@ exports[`Audit Setup > Review & Launch renders full state with batch comparison 
           </span>
         </button>
         <button
-          class="bp3-button bp3-disabled bp3-intent-primary sc-EHOje gmpgQN"
+          class="bp3-button bp3-disabled bp3-intent-primary sc-bxivhb WkpPV"
           disabled=""
           tabindex="-1"
           type="button"
@@ -1393,7 +1405,7 @@ exports[`Audit Setup > Review & Launch renders full state with jurisdictions wit
 <div>
   <div>
     <h2
-      class="bp3-heading sc-bdVaJa ibVpPq"
+      class="bp3-heading sc-ifAKCX cmZyyF"
     >
       Review & Launch
     </h2>
@@ -1428,10 +1440,10 @@ exports[`Audit Setup > Review & Launch renders full state with jurisdictions wit
       Audit Settings
     </h4>
     <div
-      class="bp3-card bp3-elevation-2 sc-ckVGcZ kiOdNq"
+      class="bp3-card bp3-elevation-2 sc-dxgOiQ jDdoJq"
     >
       <table
-        class="sc-kEYyzF knqkQg"
+        class="sc-hMqMXs kgAdZo"
       >
         <tbody>
           <tr>
@@ -1455,7 +1467,7 @@ exports[`Audit Setup > Review & Launch renders full state with jurisdictions wit
               Risk Limit:
             </td>
             <td>
-              10
+              10%
             </td>
           </tr>
           <tr>
@@ -1475,7 +1487,9 @@ exports[`Audit Setup > Review & Launch renders full state with jurisdictions wit
                 href="/api/election/1/jurisdiction/file/csv"
                 rel="noopener noreferrer"
                 target="_blank"
-              />
+              >
+                jurisdictions.csv
+              </a>
             </td>
           </tr>
           <tr>
@@ -1489,7 +1503,7 @@ exports[`Audit Setup > Review & Launch renders full state with jurisdictions wit
         </tbody>
       </table>
       <table
-        class="sc-hMqMXs fRxVKz"
+        class="sc-eNQAEJ jcIdqs"
       >
         <thead>
           <tr>
@@ -1513,7 +1527,7 @@ exports[`Audit Setup > Review & Launch renders full state with jurisdictions wit
         </tbody>
       </table>
       <table
-        class="sc-hMqMXs fRxVKz"
+        class="sc-eNQAEJ jcIdqs"
       >
         <thead>
           <tr>
@@ -1547,7 +1561,7 @@ exports[`Audit Setup > Review & Launch renders full state with jurisdictions wit
       data-testid="sample-size-form"
     >
       <div
-        class="sc-htoDjs dVdNvH"
+        class="sc-htoDjs jcQPAQ"
       >
         <div
           class="sc-dnqmqq kGMqKN"
@@ -1555,7 +1569,7 @@ exports[`Audit Setup > Review & Launch renders full state with jurisdictions wit
           Choose the initial sample size for each contest you would like to use for Round 1 of the audit from the options below.
         </div>
         <div
-          class="bp3-card bp3-elevation-2 sc-ckVGcZ kiOdNq"
+          class="bp3-card bp3-elevation-2 sc-dxgOiQ jDdoJq"
         >
           <div
             class="sc-dnqmqq kGMqKN"
@@ -1645,10 +1659,10 @@ exports[`Audit Setup > Review & Launch renders full state with jurisdictions wit
         </div>
       </div>
       <div
-        class="sc-htpNat gtULUV"
+        class="sc-bdVaJa kcYonD"
       >
         <button
-          class="bp3-button sc-EHOje gmpgQN"
+          class="bp3-button sc-bxivhb WkpPV"
           type="button"
         >
           <span
@@ -1658,7 +1672,7 @@ exports[`Audit Setup > Review & Launch renders full state with jurisdictions wit
           </span>
         </button>
         <button
-          class="bp3-button bp3-intent-primary sc-EHOje gmpgQN"
+          class="bp3-button bp3-intent-primary sc-bxivhb WkpPV"
           type="button"
         >
           <span
@@ -1677,7 +1691,7 @@ exports[`Audit Setup > Review & Launch renders full state with offline setting 1
 <div>
   <div>
     <h2
-      class="bp3-heading sc-bdVaJa ibVpPq"
+      class="bp3-heading sc-ifAKCX cmZyyF"
     >
       Review & Launch
     </h2>
@@ -1712,10 +1726,10 @@ exports[`Audit Setup > Review & Launch renders full state with offline setting 1
       Audit Settings
     </h4>
     <div
-      class="bp3-card bp3-elevation-2 sc-ckVGcZ kiOdNq"
+      class="bp3-card bp3-elevation-2 sc-dxgOiQ jDdoJq"
     >
       <table
-        class="sc-kEYyzF knqkQg"
+        class="sc-hMqMXs kgAdZo"
       >
         <tbody>
           <tr>
@@ -1739,7 +1753,7 @@ exports[`Audit Setup > Review & Launch renders full state with offline setting 1
               Risk Limit:
             </td>
             <td>
-              10
+              10%
             </td>
           </tr>
           <tr>
@@ -1759,7 +1773,9 @@ exports[`Audit Setup > Review & Launch renders full state with offline setting 1
                 href="/api/election/1/jurisdiction/file/csv"
                 rel="noopener noreferrer"
                 target="_blank"
-              />
+              >
+                jurisdictions.csv
+              </a>
             </td>
           </tr>
           <tr>
@@ -1773,7 +1789,7 @@ exports[`Audit Setup > Review & Launch renders full state with offline setting 1
         </tbody>
       </table>
       <table
-        class="sc-hMqMXs fRxVKz"
+        class="sc-eNQAEJ jcIdqs"
       >
         <thead>
           <tr>
@@ -1797,7 +1813,7 @@ exports[`Audit Setup > Review & Launch renders full state with offline setting 1
         </tbody>
       </table>
       <table
-        class="sc-hMqMXs fRxVKz"
+        class="sc-eNQAEJ jcIdqs"
       >
         <thead>
           <tr>
@@ -1822,7 +1838,7 @@ exports[`Audit Setup > Review & Launch renders full state with offline setting 1
       data-testid="sample-size-form"
     >
       <div
-        class="sc-htoDjs dVdNvH"
+        class="sc-htoDjs jcQPAQ"
       >
         <div
           class="sc-dnqmqq kGMqKN"
@@ -1830,7 +1846,7 @@ exports[`Audit Setup > Review & Launch renders full state with offline setting 1
           Choose the initial sample size for each contest you would like to use for Round 1 of the audit from the options below.
         </div>
         <div
-          class="bp3-card bp3-elevation-2 sc-ckVGcZ kiOdNq"
+          class="bp3-card bp3-elevation-2 sc-dxgOiQ jDdoJq"
         >
           <div
             class="sc-dnqmqq kGMqKN"
@@ -1920,10 +1936,10 @@ exports[`Audit Setup > Review & Launch renders full state with offline setting 1
         </div>
       </div>
       <div
-        class="sc-htpNat gtULUV"
+        class="sc-bdVaJa kcYonD"
       >
         <button
-          class="bp3-button sc-EHOje gmpgQN"
+          class="bp3-button sc-bxivhb WkpPV"
           type="button"
         >
           <span
@@ -1933,7 +1949,7 @@ exports[`Audit Setup > Review & Launch renders full state with offline setting 1
           </span>
         </button>
         <button
-          class="bp3-button bp3-intent-primary sc-EHOje gmpgQN"
+          class="bp3-button bp3-intent-primary sc-bxivhb WkpPV"
           type="button"
         >
           <span

@@ -1,61 +1,79 @@
 import { contestMocks } from './AASetup/Contests/_mocks'
-import { IFileInfo } from './useJurisdictions'
-import {
-  auditSettings,
-  manifestFile,
-  talliesFile,
-} from './useSetupMenuItems/_mocks'
+import { IFileInfo } from './useCSV'
+import { manifestFile, talliesFile, cvrsFile } from './useSetupMenuItems/_mocks'
 import { FileProcessingStatus } from './useSetupMenuItems/getJurisdictionFileStatus'
-import { IAuditSettings } from '../../types'
 import { IBallot } from './RoundManagement/useBallots'
 import { IAuditBoard } from './useAuditBoards'
 import { IRound } from './useRoundsAuditAdmin'
+import { IAuditSettings } from './useAuditSettings'
 
 const manifestFormData: FormData = new FormData()
 manifestFormData.append('manifest', manifestFile, manifestFile.name)
 const talliesFormData: FormData = new FormData()
 talliesFormData.append('batchTallies', talliesFile, talliesFile.name)
+const cvrsFormData: FormData = new FormData()
+cvrsFormData.append('cvrs', cvrsFile, cvrsFile.name)
+
+export const apiCalls = {
+  serverError: (
+    url: string,
+    error = { status: 500, statusText: 'Server Error' }
+  ) => ({
+    url,
+    response: {
+      errors: [{ errorType: 'Server Error', message: error.statusText }],
+    },
+    error,
+  }),
+  unauthenticatedUser: {
+    url: '/api/me',
+    response: { user: null, superadminUser: null },
+  },
+}
 
 export const jaApiCalls = {
   getUser: {
     url: '/api/me',
     response: {
-      type: 'jurisdiction_admin',
-      name: 'Joe',
-      email: 'test@email.org',
-      jurisdictions: [
-        {
-          id: 'jurisdiction-id-1',
-          name: 'Jurisdiction One',
-          election: {
-            id: '1',
-            auditName: 'audit one',
-            electionName: 'election one',
-            state: 'AL',
+      user: {
+        type: 'jurisdiction_admin',
+        name: 'Joe',
+        email: 'jurisdictionadmin@email.org',
+        jurisdictions: [
+          {
+            id: 'jurisdiction-id-1',
+            name: 'Jurisdiction One',
+            election: {
+              id: '1',
+              auditName: 'audit one',
+              electionName: 'election one',
+              state: 'AL',
+            },
           },
-        },
-        {
-          id: 'jurisdiction-id-2',
-          name: 'Jurisdiction Two',
-          election: {
-            id: '2',
-            auditName: 'audit two',
-            electionName: 'election two',
-            state: 'AL',
+          {
+            id: 'jurisdiction-id-2',
+            name: 'Jurisdiction Two',
+            election: {
+              id: '2',
+              auditName: 'audit two',
+              electionName: 'election two',
+              state: 'AL',
+            },
           },
-        },
-        {
-          id: 'jurisdiction-id-3',
-          name: 'Jurisdiction Three',
-          election: {
-            id: '1',
-            auditName: 'audit one',
-            electionName: 'election one',
-            state: 'AL',
+          {
+            id: 'jurisdiction-id-3',
+            name: 'Jurisdiction Three',
+            election: {
+              id: '1',
+              auditName: 'audit one',
+              electionName: 'election one',
+              state: 'AL',
+            },
           },
-        },
-      ],
-      organizations: [],
+        ],
+        organizations: [],
+      },
+      superadminUser: null,
     },
   },
   getRounds: {
@@ -94,6 +112,14 @@ export const jaApiCalls = {
     },
     response: { status: 'ok' },
   },
+  putCVRs: {
+    url: '/api/election/1/jurisdiction/jurisdiction-id-1/cvrs',
+    options: {
+      method: 'PUT',
+      body: cvrsFormData,
+    },
+    response: { status: 'ok' },
+  },
   getAuditBoards: (auditBoards: IAuditBoard[]) => ({
     url:
       '/api/election/1/jurisdiction/jurisdiction-id-1/round/round-1/audit-board',
@@ -105,23 +131,90 @@ export const jaApiCalls = {
   }),
 }
 
+const aaUser = {
+  type: 'audit_admin',
+  name: 'Joe',
+  email: 'auditadmin@email.org',
+  jurisdictions: [],
+  organizations: [
+    {
+      id: 'org-id',
+      name: 'State of California',
+      elections: [],
+    },
+  ],
+}
+
 export const aaApiCalls = {
   getUser: {
     url: '/api/me',
     response: {
-      type: 'audit_admin',
-      name: 'Joe',
-      email: 'test@email.org',
-      jurisdictions: [],
-      organizations: [
-        {
-          id: 'org-id',
-          name: 'State of California',
-          elections: [],
-        },
-      ],
+      user: aaUser,
+      superadminUser: null,
     },
   },
+  getUserWithAudit: {
+    url: '/api/me',
+    response: {
+      user: {
+        ...aaUser,
+        organizations: [
+          {
+            id: 'org-id',
+            name: 'State of California',
+            elections: [
+              {
+                id: '1',
+                auditName: 'November Presidential Election 2020',
+                electionName: '',
+                state: 'CA',
+              },
+            ],
+          },
+        ],
+      },
+      superadminUser: null,
+    },
+  },
+  getUserMultipleOrgs: {
+    url: '/api/me',
+    response: {
+      user: {
+        ...aaUser,
+        organizations: [
+          {
+            id: 'org-id',
+            name: 'State of California',
+            elections: [
+              {
+                id: '1',
+                auditName: 'November Presidential Election 2020',
+                electionName: '',
+                state: 'CA',
+              },
+            ],
+          },
+          {
+            id: 'org-id-2',
+            name: 'State of Georgia',
+            elections: [],
+          },
+        ],
+      },
+      superadminUser: null,
+    },
+  },
+  postNewAudit: (body: {}) => ({
+    url: '/api/election',
+    options: {
+      method: 'POST',
+      body: JSON.stringify(body),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    },
+    response: { electionId: '1' },
+  }),
   getRounds: (rounds: IRound[]) => ({
     url: '/api/election/1/round',
     response: { rounds },
@@ -170,17 +263,20 @@ export const aaApiCalls = {
     url: '/api/election/1/jurisdiction/file',
     response: {
       file: {
-        contents: null,
         name: 'file name',
         uploadedAt: 'a long time ago in a galaxy far far away',
       },
       processing: {
         status: FileProcessingStatus.Processed,
         error: null,
-        startedAt: 'once upon a time',
-        endedAt: 'and they lived happily ever after',
+        startedAt: '2020-12-04T02:32:15.419+00:00',
+        completedAt: '2020-12-04T02:32:15.419+00:00',
       },
     },
+  },
+  getStandardizedContestsFile: {
+    url: '/api/election/1/standardized-contests/file',
+    response: { file: null, processing: null },
   },
   getContests: {
     url: '/api/election/1/contest',
@@ -190,17 +286,41 @@ export const aaApiCalls = {
     url: '/api/election/1/settings',
     response,
   }),
-  putSettings: {
+  putSettings: (settings: IAuditSettings) => ({
     url: '/api/election/1/settings',
     options: {
       method: 'PUT',
-      body: JSON.stringify(auditSettings.all),
+      body: JSON.stringify(settings),
       headers: { 'Content-Type': 'application/json' },
     },
     response: { status: 'ok' },
-  },
+  }),
   getSampleSizes: {
     url: '/api/election/1/sample-sizes',
     response: { sampleSizes: null },
+  },
+}
+
+export const superadminApiCalls = {
+  getUser: {
+    url: '/api/me',
+    response: {
+      user: null,
+      superadminUser: { email: 'superadmin@example.com' },
+    },
+  },
+  getUserImpersonatingAA: {
+    url: '/api/me',
+    response: {
+      user: aaUser,
+      superadminUser: { email: 'superadmin@example.com' },
+    },
+  },
+  getUserImpersonatingJA: {
+    url: '/api/me',
+    response: {
+      user: jaApiCalls.getUser.response.user,
+      superadminUser: { email: 'superadmin@example.com' },
+    },
   },
 }

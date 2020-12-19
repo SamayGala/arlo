@@ -1,5 +1,5 @@
 from urllib.parse import urljoin, urlencode
-from flask import redirect, jsonify, request
+from flask import redirect, jsonify, request, session
 from authlib.integrations.flask_client import OAuth, OAuthError
 
 from . import auth
@@ -8,8 +8,9 @@ from .lib import (
     get_loggedin_user,
     set_loggedin_user,
     clear_loggedin_user,
-    set_superadmin,
-    clear_superadmin,
+    set_superadmin_user,
+    clear_superadmin_user,
+    get_superadmin_user,
     UserType,
 )
 from ..api.audit_boards import serialize_members
@@ -78,19 +79,20 @@ def serialize_election(election):
 
 @auth.route("/api/me")
 def auth_me():
-    user_type, user_key = get_loggedin_user()
+    user_type, user_key = get_loggedin_user(session)
+    user = None
     if user_type in [UserType.AUDIT_ADMIN, UserType.JURISDICTION_ADMIN]:
-        user = User.query.filter_by(email=user_key).one()
-        return jsonify(
+        db_user = User.query.filter_by(email=user_key).one()
+        user = dict(
             type=user_type,
-            email=user.email,
+            email=db_user.email,
             organizations=[
                 {
                     "id": org.id,
                     "name": org.name,
                     "elections": [serialize_election(e) for e in org.elections],
                 }
-                for org in user.organizations
+                for org in db_user.organizations
             ],
             jurisdictions=[
                 {
@@ -99,36 +101,37 @@ def auth_me():
                     "election": serialize_election(j.election),
                     "numBallots": j.manifest_num_ballots,
                 }
-                for j in user.jurisdictions
+                for j in db_user.jurisdictions
             ],
         )
     elif user_type == UserType.AUDIT_BOARD:
         audit_board = AuditBoard.query.get(user_key)
-        return jsonify(
+        user = dict(
             type=user_type,
             id=audit_board.id,
             jurisdictionId=audit_board.jurisdiction_id,
+            jurisdictionName=audit_board.jurisdiction.name,
             roundId=audit_board.round_id,
             name=audit_board.name,
             members=serialize_members(audit_board),
             signedOffAt=isoformat(audit_board.signed_off_at),
         )
-    else:
-        # sticking to JSON when not logged in, because same data type,
-        # sending a null object because there is no user logged in.
-        # Considered an empty object, but that seemed inconsistent.
-        return jsonify(None)
+
+    superadmin_email = get_superadmin_user(session)
+    return jsonify(
+        user=user, superadminUser=superadmin_email and {"email": superadmin_email}
+    )
 
 
 @auth.route("/auth/logout")
 def logout():
-    clear_superadmin()
+    clear_superadmin_user(session)
 
-    user_type, _user_email = get_loggedin_user()
+    user_type, _user_email = get_loggedin_user(session)
     if not user_type:
         return redirect("/")
 
-    clear_loggedin_user()
+    clear_loggedin_user(session)
 
     # because we have max_age on the oauth requests,
     # we don't need to log out of Auth0.
@@ -153,7 +156,7 @@ def superadmin_login_callback():
         and userinfo["email"]
         and userinfo["email"].split("@")[-1] == SUPERADMIN_EMAIL_DOMAIN
     ):
-        set_superadmin()
+        set_superadmin_user(session, userinfo["email"])
         return redirect("/superadmin/")
     else:
         return redirect("/")
@@ -174,7 +177,7 @@ def auditadmin_login_callback():
     if userinfo and userinfo["email"]:
         user = User.query.filter_by(email=userinfo["email"]).first()
         if user and len(user.audit_administrations) > 0:
-            set_loggedin_user(UserType.AUDIT_ADMIN, userinfo["email"])
+            set_loggedin_user(session, UserType.AUDIT_ADMIN, userinfo["email"])
 
     return redirect("/")
 
@@ -194,7 +197,7 @@ def jurisdictionadmin_login_callback():
     if userinfo and userinfo["email"]:
         user = User.query.filter_by(email=userinfo["email"]).first()
         if user and len(user.jurisdiction_administrations) > 0:
-            set_loggedin_user(UserType.JURISDICTION_ADMIN, userinfo["email"])
+            set_loggedin_user(session, UserType.JURISDICTION_ADMIN, userinfo["email"])
 
     return redirect("/")
 
@@ -202,7 +205,7 @@ def jurisdictionadmin_login_callback():
 @auth.route("/auditboard/<passphrase>", methods=["GET"])
 def auditboard_passphrase(passphrase):
     auditboard = AuditBoard.query.filter_by(passphrase=passphrase).one()
-    set_loggedin_user(UserType.AUDIT_BOARD, auditboard.id)
+    set_loggedin_user(session, UserType.AUDIT_BOARD, auditboard.id)
     return redirect(
         f"/election/{auditboard.jurisdiction.election.id}/audit-board/{auditboard.id}"
     )

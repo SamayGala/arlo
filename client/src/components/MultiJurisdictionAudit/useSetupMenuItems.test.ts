@@ -90,7 +90,6 @@ describe('useSetupMenuItems', () => {
   })
 
   it('handles ERRORED response from /jurisdiction/file api', async () => {
-    // TEST TODO
     apiMock.mockImplementation(
       generateApiMock(
         { rounds: roundMocks.empty },
@@ -115,7 +114,6 @@ describe('useSetupMenuItems', () => {
   })
 
   it('handles NULL response from /jurisdiction/file api', async () => {
-    // TEST TODO
     apiMock.mockImplementation(
       generateApiMock(
         { rounds: roundMocks.empty },
@@ -140,7 +138,6 @@ describe('useSetupMenuItems', () => {
   })
 
   it('handles PROCESSING response from /jurisdiction/file api', async () => {
-    // TEST TODO
     apiMock.mockImplementation(
       generateApiMock(
         { rounds: roundMocks.empty },
@@ -204,7 +201,6 @@ describe('useSetupMenuItems', () => {
   })
 
   it('handles change of PROCESSING to ERRORED response from /jurisdiction/file api', async () => {
-    // TEST TODO
     apiMock
       .mockImplementationOnce(
         generateApiMock(
@@ -268,7 +264,6 @@ describe('useSetupMenuItems', () => {
   })
 
   it('handles READY_TO_PROCESS response from /jurisdiction/file api', async () => {
-    // TEST TODO
     apiMock.mockImplementation(
       generateApiMock(
         { rounds: roundMocks.empty },
@@ -293,7 +288,6 @@ describe('useSetupMenuItems', () => {
   })
 
   it('handles background process timeout', async () => {
-    // TEST TODO
     const toastSpy = jest.spyOn(toast, 'error').mockImplementation()
     const dateIncrementor = (function* incr() {
       let i = 10

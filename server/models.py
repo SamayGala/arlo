@@ -3,7 +3,12 @@ from typing import Type, TypeVar, cast as typing_cast
 from datetime import datetime as dt, timezone
 from werkzeug.exceptions import NotFound
 from sqlalchemy import *  # pylint: disable=wildcard-import
-from sqlalchemy.orm import relationship, backref, validates, deferred as sa_deferred
+from sqlalchemy.orm import (
+    relationship,
+    backref,
+    validates,
+    deferred as sa_deferred,
+)
 from sqlalchemy.types import TypeDecorator
 from .database import Base  # pylint: disable=cyclic-import
 
@@ -545,7 +550,10 @@ class BallotInterpretation(BaseModel):
 
     interpretation = Column(Enum(Interpretation), nullable=False)
     selected_choices = relationship(
-        "ContestChoice", uselist=True, secondary="ballot_interpretation_contest_choice"
+        "ContestChoice",
+        uselist=True,
+        secondary="ballot_interpretation_contest_choice",
+        order_by="ContestChoice.created_at",
     )
     comment = Column(Text)
 
@@ -640,21 +648,6 @@ class OfflineBatchResult(BaseModel):
     __table_args__ = (
         PrimaryKeyConstraint("jurisdiction_id", "batch_name", "contest_choice_id"),
     )
-
-
-# Log of changes to OfflineBatchResult
-class OfflineBatchResultChangelog(BaseModel):
-    user_id = Column(
-        String(200), ForeignKey("user.id", ondelete="cascade"), nullable=False,
-    )
-    jurisdiction_id = Column(
-        String(200), ForeignKey("jurisdiction.id", ondelete="cascade"), nullable=False,
-    )
-
-    before = Column(JSON, nullable=False)
-    after = Column(JSON, nullable=False)
-
-    __table_args__ = (PrimaryKeyConstraint("jurisdiction_id", "user_id", "created_at"),)
 
 
 class JurisdictionResult(BaseModel):

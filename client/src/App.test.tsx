@@ -20,10 +20,11 @@ jest.unmock('react-toastify')
 const apiMocks = {
   failedAuth: {
     url: '/api/me',
-    response: null,
+    response: { user: null, superadminUser: null },
   },
   abAuth: {
     url: '/api/me',
+<<<<<<< HEAD
     response: { type: 'audit_board', ...dummyBoards()[0] },
   },
   abContest: {
@@ -35,6 +36,12 @@ const apiMocks = {
     url:
       '/api/election/1/jurisdiction/jurisdiction-1/round/round-1/audit-board/audit-board-1/ballots',
     response: null,
+=======
+    response: {
+      user: { type: 'audit_board', ...dummyBoards()[1] },
+      superadminUser: null,
+    },
+>>>>>>> main
   },
 }
 
@@ -46,7 +53,7 @@ describe('App', () => {
       const expectedCalls = [apiMocks.failedAuth]
       await withMockFetch(expectedCalls, async () => {
         const { container } = renderView('/')
-        await screen.findByAltText('Arlo, by VotingWorks')
+        await screen.findByRole('button', { name: 'Log in to your audit' })
         expect(container).toMatchSnapshot()
       })
     })
@@ -85,7 +92,7 @@ describe('App', () => {
         const { container } = renderView(
           '/election/1/audit-board/audit-board-1'
         )
-        await screen.findByAltText('Arlo, by VotingWorks')
+        await screen.findByRole('button', { name: 'Log in to your audit' })
         expect(container).toMatchSnapshot()
       })
     })
@@ -113,12 +120,16 @@ describe('App', () => {
     })
 
     it('renders ab logged in properly', async () => {
+<<<<<<< HEAD
       const expectedCalls = [
         apiMocks.abAuth,
         apiMocks.abAuth,
         apiMocks.abContest,
         apiMocks.abBallot,
       ]
+=======
+      const expectedCalls = [apiMocks.abAuth, apiMocks.abAuth]
+>>>>>>> main
       await withMockFetch(expectedCalls, async () => {
         const { container } = render(
           <MemoryRouter
@@ -128,7 +139,11 @@ describe('App', () => {
             <App />
           </MemoryRouter>
         )
+<<<<<<< HEAD
         await screen.findByText('Audit Board #1: Ballot Cards to Audit')
+=======
+        await screen.findByText('Audit Board #2: Member Sign-in')
+>>>>>>> main
         expect(container).toMatchSnapshot()
       })
     })
@@ -141,7 +156,7 @@ describe('App', () => {
         const { container } = renderView(
           '/election/1/jurisdiction/jurisdiction-id-1'
         )
-        await screen.findByAltText('Arlo, by VotingWorks')
+        await screen.findByRole('button', { name: 'Log in to your audit' })
         expect(container).toMatchSnapshot()
       })
     })
