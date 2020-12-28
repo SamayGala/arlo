@@ -24,24 +24,10 @@ const apiMocks = {
   },
   abAuth: {
     url: '/api/me',
-<<<<<<< HEAD
-    response: { type: 'audit_board', ...dummyBoards()[0] },
-  },
-  abContest: {
-    url:
-      '/api/election/1/jurisdiction/jurisdiction-1/round/round-1/audit-board/audit-board-1/contest',
-    response: null,
-  },
-  abBallot: {
-    url:
-      '/api/election/1/jurisdiction/jurisdiction-1/round/round-1/audit-board/audit-board-1/ballots',
-    response: null,
-=======
     response: {
       user: { type: 'audit_board', ...dummyBoards()[1] },
       superadminUser: null,
     },
->>>>>>> main
   },
 }
 
@@ -120,16 +106,7 @@ describe('App', () => {
     })
 
     it('renders ab logged in properly', async () => {
-<<<<<<< HEAD
-      const expectedCalls = [
-        apiMocks.abAuth,
-        apiMocks.abAuth,
-        apiMocks.abContest,
-        apiMocks.abBallot,
-      ]
-=======
       const expectedCalls = [apiMocks.abAuth, apiMocks.abAuth]
->>>>>>> main
       await withMockFetch(expectedCalls, async () => {
         const { container } = render(
           <MemoryRouter
@@ -139,11 +116,7 @@ describe('App', () => {
             <App />
           </MemoryRouter>
         )
-<<<<<<< HEAD
-        await screen.findByText('Audit Board #1: Ballot Cards to Audit')
-=======
         await screen.findByText('Audit Board #2: Member Sign-in')
->>>>>>> main
         expect(container).toMatchSnapshot()
       })
     })
