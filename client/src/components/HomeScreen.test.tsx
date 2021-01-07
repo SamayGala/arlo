@@ -76,7 +76,6 @@ describe('Home screen', () => {
       aaApiCalls.getJurisdictionFile,
       aaApiCalls.getRounds([]),
       aaApiCalls.getSettings(auditSettings.blank),
-      ...setupScreenCalls,
       aaApiCalls.getJurisdictionFile,
       ...setupScreenCalls,
     ]

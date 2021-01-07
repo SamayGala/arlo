@@ -77,9 +77,9 @@ describe('AA setup flow', () => {
       aaApiCalls.getUser,
       ...loadEach,
       ...loadEach,
-      ...loadEach,
       aaApiCalls.getSettings(auditSettings.all),
       aaApiCalls.getJurisdictionFile,
+      ...loadEach,
       aaApiCalls.getSettings(auditSettings.all),
       ...loadEach,
     ]
@@ -160,9 +160,9 @@ describe('AA setup flow', () => {
       aaApiCalls.getUser,
       ...loadEach,
       ...loadEach,
-      ...loadEach,
       aaApiCalls.getSettings(auditSettings.all),
       aaApiCalls.getJurisdictionFile,
+      ...loadEach,
     ]
     await withMockFetch(expectedCalls, async () => {
       const { container, queryAllByText } = render(
