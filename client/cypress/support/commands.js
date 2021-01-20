@@ -54,3 +54,7 @@ Cypress.Commands.add('loginJurisdictionAdmin', email => {
     cy.visit(`/auth/jurisdictionadmin/callback?${callbackParams}`)
   })
 })
+
+Cypress.Commands.add('logout', function() {
+  cy.visit(`/auth/logout`)
+})
