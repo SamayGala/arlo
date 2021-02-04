@@ -332,7 +332,7 @@ const Review: React.FC<IProps> = ({ prevStage, locked, refresh }: IProps) => {
                             }
                             type="number"
                             validate={
-                              auditType === 'BATCH_COMPARISON'
+                              auditType === 'BALLOT_COMPARISON'
                                 ? testNumber()
                                 : testNumber(
                                     Number(contest.totalBallotsCast),

@@ -709,6 +709,16 @@ CREATE_ROUND_REQUEST_SCHEMA = {
 def validate_round(round: dict, election: Election):
     validate(round, CREATE_ROUND_REQUEST_SCHEMA)
 
+    count = 0
+    if election.audit_type != AuditType.BALLOT_COMPARISON:
+        for single_contest in election.contests:
+            if single_contest.is_targeted:
+                contest_sample_size_arr = list(round["sampleSizes"].values())
+                contest_sample_size = contest_sample_size_arr[count]
+                if contest_sample_size > single_contest.total_ballots_cast:
+                    raise Conflict(f"Sample size must be less than or equal to: {single_contest.total_ballots_cast} (the total number of ballots in the targeted contest)")
+                    count += 1
+    
     current_round = get_current_round(election)
     if current_round and not current_round.draw_sample_task.completed_at:
         raise Conflict("Arlo is already currently drawing the sample for this round.")
