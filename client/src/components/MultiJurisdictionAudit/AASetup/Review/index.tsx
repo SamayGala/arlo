@@ -134,6 +134,36 @@ const Review: React.FC<IProps> = ({ prevStage, locked, refresh }: IProps) => {
     isFileProcessed(j.ballotManifest)
   ).length
 
+ 
+  const getBatchTotal = () => {
+    let batchTotal = 0;
+    let manifestTotalBatch: number | null;
+    participatingJurisdictions.map(jurisdiction => {
+      manifestTotalBatch = jurisdiction.ballotManifest.numBatches;
+      if(manifestTotalBatch != null) {
+        batchTotal += manifestTotalBatch;
+      }
+      
+    })
+    return batchTotal = contests ? batchTotal : 0
+  }
+
+  const validate_custom_sample = (totalBallotsCast: string) => {
+    if(auditType === 'BALLOT_POLLING') {
+      return testNumber(
+        Number(totalBallotsCast),
+        `Must be less than or equal to: ${totalBallotsCast} (the total number of ballots in this targeted contest)`
+      )
+    } else if(auditType === 'BATCH_COMPARISON') {
+      return testNumber(
+        Number(getBatchTotal()),
+        `Must be less than or equal to: ${Number(getBatchTotal())} (the total number of batches in this targeted contest)`
+      )
+    } else {
+      return testNumber();
+    }
+  }
+
   return (
     <div>
       <H2Title>Review &amp; Launch</H2Title>
@@ -331,13 +361,8 @@ const Review: React.FC<IProps> = ({ prevStage, locked, refresh }: IProps) => {
                               )
                             }
                             type="number"
-                            validate={
-                              auditType === 'BALLOT_COMPARISON'
-                                ? testNumber()
-                                : testNumber(
-                                    Number(contest.totalBallotsCast),
-                                    `Must be less than or equal to: ${contest.totalBallotsCast} (the total number of ballots in this targeted contest)`
-                                  )
+                            validate={ 
+                              validate_custom_sample(contest.totalBallotsCast)
                             }
                           />
                         )}

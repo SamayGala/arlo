@@ -709,8 +709,19 @@ CREATE_ROUND_REQUEST_SCHEMA = {
 def validate_round(round: dict, election: Election):
     validate(round, CREATE_ROUND_REQUEST_SCHEMA)
 
+    total_batches = 0
+    if election.audit_type == AuditType.BATCH_COMPARISON:
+        contest_sample_size_arr = list(round["sampleSizes"].values())
+        contest_sample_size = contest_sample_size_arr[0]
+        for single_contest in election.contests:
+            if single_contest.is_targeted:
+                for jurisdiction in single_contest.jurisdictions:
+                    total_batches += jurisdiction.manifest_num_batches
+                if contest_sample_size > total_batches:
+                    raise Conflict(f"Sample size must be less than or equal to: {total_batches} (the total number of batches in the targeted contest)")
+
     count = 0
-    if election.audit_type != AuditType.BALLOT_COMPARISON:
+    if election.audit_type == AuditType.BALLOT_POLLING:
         for single_contest in election.contests:
             if single_contest.is_targeted:
                 contest_sample_size_arr = list(round["sampleSizes"].values())
