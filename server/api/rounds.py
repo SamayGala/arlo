@@ -729,6 +729,20 @@ def validate_round(round: dict, election: Election):
                 if contest_sample_size > single_contest.total_ballots_cast:
                     raise Conflict(f"Sample size must be less than or equal to: {single_contest.total_ballots_cast} (the total number of ballots in the targeted contest)")
                     count += 1
+
+    total_ballots = 0
+    if election.audit_type == AuditType.BALLOT_COMPARISON:
+        contest_sample_size_arr = list(round["sampleSizes"].values())
+        sample_size_count = len(contest_sample_size_arr) - 2
+        for single_contest in election.contests:
+            contest_sample_size = contest_sample_size_arr[sample_size_count-1]
+            total_ballots = 0
+            if single_contest.is_targeted:
+                for jurisdiction in single_contest.jurisdictions:
+                    total_ballots += jurisdiction.manifest_num_ballots
+                if contest_sample_size > total_ballots:
+                    raise Conflict(f"Sample size must be less than or equal to: {total_ballots} (the total number of ballots in the targeted contest)")
+                sample_size_count -= 1
     
     current_round = get_current_round(election)
     if current_round and not current_round.draw_sample_task.completed_at:

@@ -134,7 +134,6 @@ const Review: React.FC<IProps> = ({ prevStage, locked, refresh }: IProps) => {
     isFileProcessed(j.ballotManifest)
   ).length
 
- 
   const getBatchTotal = () => {
     let batchTotal = 0;
     let manifestTotalBatch: number | null;
@@ -143,12 +142,27 @@ const Review: React.FC<IProps> = ({ prevStage, locked, refresh }: IProps) => {
       if(manifestTotalBatch != null) {
         batchTotal += manifestTotalBatch;
       }
-      
     })
     return batchTotal = contests ? batchTotal : 0
   }
 
-  const validate_custom_sample = (totalBallotsCast: string) => {
+  let filteredJursdictions;
+  const getBallotTotal = (jurisdictionIds: any) => {
+    let ballotTotal = 0;
+    let manifestTotalBallot: number | null;
+    filteredJursdictions = jurisdictions.filter((jurisdiction: any) => {
+        return jurisdictionIds.find((p: any) => p === jurisdiction.name)
+    })
+    filteredJursdictions.map((single_jurisdiction: any) => {
+      manifestTotalBallot = single_jurisdiction.ballotManifest.numBallots;
+      if(manifestTotalBallot != null) {
+        ballotTotal += manifestTotalBallot;
+      }
+    })
+    return ballotTotal = contests ? ballotTotal : 0
+  }
+
+  const validate_custom_sample = (totalBallotsCast: string, jurisdictionIds: any) => {
     if(auditType === 'BALLOT_POLLING') {
       return testNumber(
         Number(totalBallotsCast),
@@ -160,7 +174,10 @@ const Review: React.FC<IProps> = ({ prevStage, locked, refresh }: IProps) => {
         `Must be less than or equal to: ${Number(getBatchTotal())} (the total number of batches in this targeted contest)`
       )
     } else {
-      return testNumber();
+      return testNumber(
+        Number(getBallotTotal(jurisdictionIds)),
+        `Must be less than or equal to: ${Number(getBallotTotal(jurisdictionIds))} (the total number of ballots in this targeted contest)`
+      )
     }
   }
 
@@ -362,7 +379,8 @@ const Review: React.FC<IProps> = ({ prevStage, locked, refresh }: IProps) => {
                             }
                             type="number"
                             validate={ 
-                              validate_custom_sample(contest.totalBallotsCast)
+                              // console.log(contest.jurisdictionIds)
+                              validate_custom_sample(contest.totalBallotsCast, contest.jurisdictionIds)
                             }
                           />
                         )}
