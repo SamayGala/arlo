@@ -26,7 +26,7 @@
 
 import url from 'url'
 import qs from 'querystring'
-import 'cypress-file-upload'
+// import 'cypress-file-upload'
 
 Cypress.Commands.add('loginAuditAdmin', email => {
   cy.request({ url: '/auth/auditadmin/start', followRedirect: false }).then(
@@ -55,6 +55,7 @@ Cypress.Commands.add('loginJurisdictionAdmin', email => {
   })
 })
 
-Cypress.Commands.add('logout', function() {
-  cy.visit(`/auth/logout`)
+Cypress.Commands.add('logout', () => {
+  cy.get('.bp3-popover-target button').click()
+  cy.findByText('Log out').click()
 })

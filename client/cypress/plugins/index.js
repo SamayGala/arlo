@@ -15,7 +15,6 @@
 /**
  * @type {Cypress.PluginConfig}
  */
-
 const fs = require('fs')
 const path = require('path')
 const pdf = require('pdf-parse');
@@ -36,12 +35,16 @@ const parsePdf = async (pdfName) => {
   })
   on("before:browser:launch", (browser = {}, launchOptions) => {
     const downloadDirectory = path.join(__dirname, '..', 'fixtures/PDFs')
-  
-    if (browser.family === 'chromium') {
-     launchOptions.preferences.default['download'] = { default_directory: downloadDirectory }
+
+    if (browser.family === 'chromium' && browser.name !== 'electron') {
+      launchOptions.preferences.default['download'] = {
+        default_directory: downloadDirectory,
+        prompt_for_download: false,
+        directory_upgrade: false,
+      }
     }
     return launchOptions;
-  });
+  })
   // `on` is used to hook into various events Cypress emits
   // `config` is the resolved Cypress config
 }

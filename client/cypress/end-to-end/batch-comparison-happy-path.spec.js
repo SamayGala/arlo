@@ -2,7 +2,7 @@ import 'cypress-file-upload'
 
 before(() => cy.exec('./cypress/seed-test-db.sh'))
 
-describe('Ballot Comparison', () => {
+describe('Batch Comparison', () => {
   const uuid = () => Cypress._.random(0, 1e6)
   let id = 0
   let board_credentials_url = ''
@@ -26,7 +26,7 @@ describe('Ballot Comparison', () => {
       firstButton.click()
     })
     cy.contains("Upload successfully completed")   
-  
+
     cy.wait(2000)
     cy.findByText('Next').click()
     cy.findAllByText('Target Contests').should('have.length', 2)
@@ -43,30 +43,32 @@ describe('Ballot Comparison', () => {
     cy.get('#state').select('AL')
     cy.get('input[name=electionName]').type(`Test Election`)
     cy.get('#risk-limit').select('10')
-    cy.get('input[name=randomSeed]').type("543210")
+    cy.get('input[name=randomSeed]').type("54321")
     cy.findByText('Save & Next').click()
     cy.findAllByText('Review & Launch').should('have.length', 2)
+    cy.wait(1000)
     cy.logout()
+    cy.wait(1000)
     cy.contains('Participating in an audit in your local jurisdiction?')
     cy.loginJurisdictionAdmin('wtarkin@empire.gov')
     cy.findByText(`Jurisdictions - TestAudit${id}`).siblings('button').click()
     cy.fixture('CSVs/manifest/batch_comparison_manifest.csv').then(fileContent => {
-    cy.get('input[type="file"]').first().attachFile({
-        fileContent: fileContent.toString(),
-        fileName: 'batch_comparison_manifest.csv',
-        mimeType: 'csv'
-    })
+      cy.get('input[type="file"]').first().attachFile({
+          fileContent: fileContent.toString(),
+          fileName: 'batch_comparison_manifest.csv',
+          mimeType: 'csv'
+      })
     })
     cy.findAllByText('Upload File').spread((firstButton, secondButton) => {
-    firstButton.click()
+      firstButton.click()
     })
     cy.contains("Upload successfully completed")   
     cy.fixture('CSVs/candidate-total-batch/sample_candidate_totals_by_batch.csv').then(fileContent => {
-    cy.get('input[type="file"]').last().attachFile({
-        fileContent: fileContent.toString(),
-        fileName: 'sample_candidate_totals_by_batch.csv',
-        mimeType: 'csv'
-    })
+      cy.get('input[type="file"]').last().attachFile({
+          fileContent: fileContent.toString(),
+          fileName: 'sample_candidate_totals_by_batch.csv',
+          mimeType: 'csv'
+      })
     })
     cy.findAllByText('Upload File').click()
     cy.findAllByText(/Upload successfully completed/).should('have.length', 2)
@@ -80,7 +82,9 @@ describe('Ballot Comparison', () => {
       secondButton.click()
     })
     cy.get('tbody').children('tr').its('length').should('be.gt', 0)
+    cy.wait(1000)
     cy.logout()
+    cy.wait(1000)
     cy.contains('Participating in an audit in your local jurisdiction?')
     cy.loginJurisdictionAdmin('wtarkin@empire.gov')
     cy.findByText(`Jurisdictions - TestAudit${id}`).siblings('button').click()
