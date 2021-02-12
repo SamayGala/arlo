@@ -2,7 +2,8 @@ before(() => cy.exec('./cypress/seed-test-db.sh'))
 
 describe('Audit creation, filling in standard ballot comparison values', () => {
     const uuid = () => Cypress._.random(0, 1e6)
-    const id = 0
+    let id = 0
+    let board_credentials_url = ''
 
     beforeEach(() => {
         id = uuid()
@@ -363,6 +364,7 @@ describe('Audit creation, filling in standard ballot comparison values', () => {
         cy.findAllByText('Launch Audit').spread((firstButton, secondButton) => {
         secondButton.click()
         })
+        cy.wait(1000)
         cy.get('tbody').children('tr').its('length').should('be.gt', 0)
         cy.logout()
         cy.wait(1000)
