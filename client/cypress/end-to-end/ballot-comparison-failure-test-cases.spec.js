@@ -14,14 +14,11 @@ describe('Audit creation, filling in standard ballot comparison values', () => {
         cy.contains("Audit Setup")
     })
 
-    it('Participating Jurisdictions - File not uploaded error', () => {
+    it('Participating Jurisdictions - File errors', () => {
         cy.findAllByText('Upload File').spread((firstButton, secondButton) => {
             firstButton.click()
         })
         cy.contains("You must upload a file") 
-    })
-
-    it('participating jurisdictions invalid CSV - Jurisdiction column error', () => {
         cy.fixture('CSVs/jurisdiction/sample_jurisdiction_filesheet_jurisdiction_col_error.csv').then(fileContent => {
             cy.get('input[type="file"]').first().attachFile({
                 fileContent: fileContent.toString(),
@@ -32,14 +29,13 @@ describe('Audit creation, filling in standard ballot comparison values', () => {
         cy.findAllByText('Upload File').spread((firstButton, secondButton) => {
             firstButton.click()
         })
-        cy.get('.Toastify').find('div').find('div').contains('Missing required CSV field "Jurisdiction"').invoke('text')
+        cy.get('.Toastify').get('.Toastify__toast-body').should('be.visible').contains('Missing required CSV field "Jurisdiction"').invoke('text')
         .then((text)=>{
             const toastText = text;
             expect(toastText).to.equal('Missing required CSV field "Jurisdiction"');
-        })   
-    })
+        })
+        cy.get('.Toastify').find('div').should('not.have.class', 'Toastify__bounce-exit--top-right').get('.Toastify__close-button').click()
 
-    it('participating jurisdictions invalid CSV - Admin Email column error', () => {
         cy.fixture('CSVs/jurisdiction/sample_jurisdiction_filesheet_admin_email_col_error.csv').then(fileContent => {
             cy.get('input[type="file"]').first().attachFile({
                 fileContent: fileContent.toString(),
@@ -47,17 +43,16 @@ describe('Audit creation, filling in standard ballot comparison values', () => {
                 mimeType: 'csv'
             })
         })
-        cy.findAllByText('Upload File').spread((firstButton, secondButton) => {
+        cy.findAllByText('Upload File',{timeout: 6000}).spread((firstButton, secondButton) => {
             firstButton.click()
         })
-        cy.get('.Toastify').find('div').find('div').contains('Missing required CSV field "Admin Email"').invoke('text')
+        cy.get('.Toastify').get('.Toastify__toast-body').should('be.visible').contains('Missing required CSV field "Admin Email"').invoke('text')
         .then((text)=>{
             const toastText = text;
             expect(toastText).to.equal('Missing required CSV field "Admin Email"');
-      })   
-    })
+        })
+        cy.get('.Toastify').find('div').should('not.have.class', 'Toastify__bounce-exit--top-right').get('.Toastify__close-button').click()
 
-    it('participating jurisdictions invalid CSV - Invalid Email error', () => {
         cy.fixture('CSVs/jurisdiction/sample_jurisdiction_filesheet_email_ID_error.csv').then(fileContent => {
             cy.get('input[type="file"]').first().attachFile({
                 fileContent: fileContent.toString(),
@@ -68,10 +63,11 @@ describe('Audit creation, filling in standard ballot comparison values', () => {
         cy.findAllByText('Upload File').spread((firstButton, secondButton) => {
             firstButton.click()
         })
-        cy.contains("Expected an email address in column Admin Email")   
+        cy.contains("Expected an email address in column Admin Email")
     })
 
-    it('Standardized Contests - File not uploaded error', () => {
+
+    it('Standardized Contests - File errors', () => {
         cy.fixture('CSVs/jurisdiction/sample_jurisdiction_filesheet.csv').then(fileContent => {
             cy.get('input[type="file"]').first().attachFile({
                 fileContent: fileContent.toString(),
@@ -86,20 +82,6 @@ describe('Audit creation, filling in standard ballot comparison values', () => {
 
         cy.findAllByText('Upload File').click()
         cy.contains("You must upload a file")   
-    })
-
-    it('Standardized Contests invalid CSV - Contest name column error', () => {
-        cy.fixture('CSVs/jurisdiction/sample_jurisdiction_filesheet.csv').then(fileContent => {
-            cy.get('input[type="file"]').first().attachFile({
-                fileContent: fileContent.toString(),
-                fileName: 'sample_jurisdiction_filesheet.csv',
-                mimeType: 'csv'
-            })
-        })
-        cy.findAllByText('Upload File').spread((firstButton, secondButton) => {
-            firstButton.click()
-        })
-        cy.contains("Upload successfully completed")   
 
         cy.fixture('CSVs/contest/sample_standardized_contests_contest_name_col_error.csv').then(fileContent => {
             cy.get('input[type="file"]').last().attachFile({
@@ -109,22 +91,12 @@ describe('Audit creation, filling in standard ballot comparison values', () => {
             })
         })
         cy.findAllByText('Upload File').click()
-        cy.contains("Missing required column: Contest Name.")      
-    })
-
-    it('Standardized Contests invalid CSV - Jurisdiction column error', () => {
-        cy.fixture('CSVs/jurisdiction/sample_jurisdiction_filesheet.csv').then(fileContent => {
-            cy.get('input[type="file"]').first().attachFile({
-                fileContent: fileContent.toString(),
-                fileName: 'sample_jurisdiction_filesheet.csv',
-                mimeType: 'csv'
-            })
+        cy.contains("Missing required column: Contest Name.") 
+        
+        cy.findAllByText('Replace File').spread((firstButton, secondButton) => {
+            secondButton.click()
         })
-        cy.findAllByText('Upload File').spread((firstButton, secondButton) => {
-            firstButton.click()
-        })
-        cy.contains("Upload successfully completed")   
-
+        
         cy.fixture('CSVs/contest/sample_standardized_contests_jurisdiction_col_error.csv').then(fileContent => {
             cy.get('input[type="file"]').last().attachFile({
                 fileContent: fileContent.toString(),
@@ -134,20 +106,10 @@ describe('Audit creation, filling in standard ballot comparison values', () => {
         })
         cy.findAllByText('Upload File').click()
         cy.contains("Missing required column: Jurisdictions.")
-    })
 
-    it('Standardized Contests invalid CSV - Non-participating Jurisdiction error', () => {
-        cy.fixture('CSVs/jurisdiction/sample_jurisdiction_filesheet.csv').then(fileContent => {
-            cy.get('input[type="file"]').first().attachFile({
-                fileContent: fileContent.toString(),
-                fileName: 'sample_jurisdiction_filesheet.csv',
-                mimeType: 'csv'
-            })
+        cy.findAllByText('Replace File').spread((firstButton, secondButton) => {
+            secondButton.click()
         })
-        cy.findAllByText('Upload File').spread((firstButton, secondButton) => {
-            firstButton.click()
-        })
-        cy.contains("Upload successfully completed")   
 
         cy.fixture('CSVs/contest/sample_standardized_contests_non_participating_jurisdiction_error.csv').then(fileContent => {
             cy.get('input[type="file"]').last().attachFile({
@@ -182,11 +144,10 @@ describe('Audit creation, filling in standard ballot comparison values', () => {
         })
         cy.findAllByText('Upload File').click()
         cy.findAllByText(/Upload successfully completed/).should('have.length', 2)
-        cy.wait(2000)
-        cy.findByText('Next').click()
+        cy.get('button[type="submit"]').should('not.have.class', 'bp3-disabled').click()
         cy.findAllByText('Target Contests').should('have.length', 2)
         cy.findByText('Save & Next').click()
-        cy.get('.Toastify').find('div').find('div').contains('Must have at least one targeted contest').invoke('text')
+        cy.get('.Toastify').get('.Toastify__toast-body').should('be.visible').contains('Must have at least one targeted contest').invoke('text')
         .then((text)=>{
             const toastText = text;
             expect(toastText).to.equal('Must have at least one targeted contest');
@@ -215,8 +176,7 @@ describe('Audit creation, filling in standard ballot comparison values', () => {
         })
         cy.findAllByText('Upload File').click()
         cy.findAllByText(/Upload successfully completed/).should('have.length', 2)
-        cy.wait(2000)
-        cy.findByText('Next').click()
+        cy.get('button[type="submit"]').should('not.have.class', 'bp3-disabled').click()
         cy.findAllByText('Target Contests').should('have.length', 2)
         cy.get('input[type="checkbox"]').first().check({ force: true })
         cy.findByText('Save & Next').click()
@@ -281,8 +241,7 @@ describe('Audit creation, filling in standard ballot comparison values', () => {
         })
         cy.findAllByText('Upload File').click()
         cy.findAllByText(/Upload successfully completed/).should('have.length', 2)
-        cy.wait(2000)
-        cy.findByText('Next').click()
+        cy.get('button[type="submit"]').should('not.have.class', 'bp3-disabled').click()
         cy.findAllByText('Target Contests').should('have.length', 2)
         cy.get('input[type="checkbox"]').first().check({ force: true })
         cy.findByText('Save & Next').click()
@@ -357,8 +316,7 @@ describe('Audit creation, filling in standard ballot comparison values', () => {
         })
         cy.findAllByText('Upload File').click()
         cy.findAllByText(/Upload successfully completed/).should('have.length', 2)
-        cy.wait(2000)
-        cy.findByText('Next').click()
+        cy.get('button[type="submit"]').should('not.have.class', 'bp3-disabled').click()
         cy.findAllByText('Target Contests').should('have.length', 2)
         cy.get('input[type="checkbox"]').first().check({ force: true })
         cy.findByText('Save & Next').click()
@@ -405,7 +363,6 @@ describe('Audit creation, filling in standard ballot comparison values', () => {
         cy.findAllByText('Launch Audit').spread((firstButton, secondButton) => {
         secondButton.click()
         })
-        cy.wait(1000)
         cy.get('tbody').children('tr').its('length').should('be.gt', 0)
         cy.logout()
         cy.wait(1000)
@@ -434,7 +391,7 @@ describe('Audit creation, filling in standard ballot comparison values', () => {
         cy.findByText('Start Auditing').click()
         cy.findByText('Review').click() 
         cy.findByText('Submit & Next Ballot').click() 
-        cy.get('.Toastify').find('div').find('div').contains('Must include an interpretation for each contest.').invoke('text')
+        cy.get('.Toastify').get('.Toastify__toast-body').should('be.visible').contains('Must include an interpretation for each contest.').invoke('text')
             .then((text) => {
                 const toastText = text
                 expect(toastText).to.equal('Must include an interpretation for each contest.')
