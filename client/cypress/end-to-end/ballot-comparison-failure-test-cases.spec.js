@@ -361,7 +361,9 @@ describe('Audit creation, filling in standard ballot comparison values', () => {
         cy.findAllByText('Launch Audit').spread((firstButton, secondButton) => {
         secondButton.click()
         })
-        cy.contains('Drawing a random sample of ballots...')
+        // cy.contains('Drawing a random sample of ballots...')
+        cy.get('table').should('be.visible')
+        cy.get('tbody').children('tr').its('length').should('be.gt', 0) // ensures ballot drawing is done
         cy.get('tbody').children('tr').its('length').should('be.gt', 0)
         cy.logout(auditAdmin)
         cy.contains('Participating in an audit in your local jurisdiction?')
