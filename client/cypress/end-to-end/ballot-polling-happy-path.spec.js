@@ -147,7 +147,8 @@ describe('Ballot Polling', () => {
       secondButton.click()
     })
     // cy.contains('Audit Progress')
-    cy.contains('Drawing a random sample of ballots...')
+    // cy.contains('Drawing a random sample of ballots...')
+    cy.get('table').should('be.visible')
     cy.get('tbody').children('tr').its('length').should('be.gt', 0) // ensures ballot drawing is done
     cy.logout(auditAdmin)
     cy.loginJurisdictionAdmin(jurisdictionAdmin)
