@@ -134,6 +134,62 @@ const Review: React.FC<IProps> = ({ prevStage, locked, refresh }: IProps) => {
     isFileProcessed(j.ballotManifest)
   ).length
 
+  const getBatchTotal = () => {
+    let batchTotal = 0
+    let manifestTotalBatch: number | null
+    participatingJurisdictions.forEach(jurisdiction => {
+      manifestTotalBatch = jurisdiction.ballotManifest.numBatches
+      if (manifestTotalBatch != null) {
+        batchTotal += manifestTotalBatch
+      }
+    })
+    batchTotal = contests ? batchTotal : 0
+    return batchTotal
+  }
+
+  let filteredJursdictions
+  const getBallotTotal = (jurisdictionIds: any) => {
+    let ballotTotal = 0
+    let manifestTotalBallot: number | null
+    filteredJursdictions = jurisdictions.filter((jurisdiction: any) => {
+      return jurisdictionIds.find((p: any) => p === jurisdiction.name)
+    })
+    filteredJursdictions.forEach((singleJurisdiction: any) => {
+      manifestTotalBallot = singleJurisdiction.ballotManifest.numBallots
+      if (manifestTotalBallot != null) {
+        ballotTotal += manifestTotalBallot
+      }
+    })
+    ballotTotal = contests ? ballotTotal : 0
+    return ballotTotal
+  }
+
+  const validateCustomSampleSize = (
+    totalBallotsCast: string,
+    jurisdictionIds: any
+  ) => {
+    if (auditType === 'BALLOT_POLLING') {
+      return testNumber(
+        Number(totalBallotsCast),
+        `Must be less than or equal to: ${totalBallotsCast} (the total number of ballots in this targeted contest)`
+      )
+    }
+    if (auditType === 'BATCH_COMPARISON') {
+      return testNumber(
+        Number(getBatchTotal()),
+        `Must be less than or equal to: ${Number(
+          getBatchTotal()
+        )} (the total number of batches in this targeted contest)`
+      )
+    }
+    return testNumber(
+      Number(getBallotTotal(jurisdictionIds)),
+      `Must be less than or equal to: ${Number(
+        getBallotTotal(jurisdictionIds)
+      )} (the total number of ballots in this targeted contest)`
+    )
+  }
+
   return (
     <div>
       <H2Title>Review &amp; Launch</H2Title>
@@ -331,14 +387,10 @@ const Review: React.FC<IProps> = ({ prevStage, locked, refresh }: IProps) => {
                               )
                             }
                             type="number"
-                            validate={
-                              auditType === 'BATCH_COMPARISON'
-                                ? testNumber()
-                                : testNumber(
-                                    Number(contest.totalBallotsCast),
-                                    `Must be less than or equal to: ${contest.totalBallotsCast} (the total number of ballots in this targeted contest)`
-                                  )
-                            }
+                            validate={validateCustomSampleSize(
+                              contest.totalBallotsCast,
+                              contest.jurisdictionIds
+                            )}
                           />
                         )}
                       </FormSectionDescription>
