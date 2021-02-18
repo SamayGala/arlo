@@ -485,7 +485,7 @@ def test_ballot_comparison_cvr_metadata(
     assert ballot_missing_contest["contestsOnBallot"] == [contests[0]["id"]]
 
 
-def test_custom_sample_size_validation(
+def test_ballot_comparison_custom_sample_size_validation(
     client: FlaskClient,
     election_id: str,
     jurisdiction_ids: List[str],  # pylint: disable=unused-argument
@@ -509,13 +509,6 @@ def test_custom_sample_size_validation(
     )
     assert_ok(rv)
 
-    contest = Contest.query.get(contest_id)
-    assert contest.total_ballots_cast is None
-    assert contest.votes_allowed is None
-    assert contest.choices == []
-
-    set_contest_metadata_from_cvrs(contest)
-
     rv = post_json(
         client,
         f"/api/election/{election_id}/round",
@@ -524,7 +517,7 @@ def test_custom_sample_size_validation(
     assert json.loads(rv.data) == {
         "errors": [
             {
-                "message": "Sample size must be less than or equal to: 30 (the total number of ballots in the targeted contest)",
+                "message": "Sample size must be less than or equal to: 30 (the total number of ballots in the targeted contest 'Contest 2')",
                 "errorType": "Conflict",
             }
         ]

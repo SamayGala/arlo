@@ -399,7 +399,7 @@ def test_batch_comparison_round_2(
     assert_match_report(rv.data, snapshot)
 
 
-def test_custom_sample_size_validation(
+def test_batch_comparison_custom_sample_size_validation(
     client: FlaskClient,
     election_id: str,
     contest_id: str,
@@ -423,7 +423,7 @@ def test_custom_sample_size_validation(
     assert json.loads(rv.data) == {
         "errors": [
             {
-                "message": "Sample size must be less than or equal to: 15 (the total number of batches in the targeted contest)",
+                "message": "Sample size must be less than or equal to: 15 (the total number of batches in the targeted contest 'Contest 1')",
                 "errorType": "Conflict",
             }
         ]
