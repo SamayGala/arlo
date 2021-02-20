@@ -2738,11 +2738,14 @@ arch@^2.1.2:
   version "2.2.0"
   resolved "https://registry.yarnpkg.com/arch/-/arch-2.2.0.tgz#1bc47818f305764f23ab3306b0bfc086c5a29d11"
   integrity sha512-Of/R0wqp83cgHozfIYLbBMnej79U/SVGOOyuB3VVFv1NRM/PSFMK12x9KVtiYzJqmnU5WR2qp0Z5rHb7sWGnFQ==
+<<<<<<< HEAD
 
 arch@^2.1.2:
   version "2.2.0"
   resolved "https://registry.yarnpkg.com/arch/-/arch-2.2.0.tgz#1bc47818f305764f23ab3306b0bfc086c5a29d11"
   integrity sha512-Of/R0wqp83cgHozfIYLbBMnej79U/SVGOOyuB3VVFv1NRM/PSFMK12x9KVtiYzJqmnU5WR2qp0Z5rHb7sWGnFQ==
+=======
+>>>>>>> upstream/main
 
 are-we-there-yet@~1.1.2:
   version "1.1.5"
@@ -3883,6 +3886,7 @@ cli-table3@~0.6.0:
   dependencies:
     object-assign "^4.1.0"
     string-width "^4.2.0"
+<<<<<<< HEAD
   optionalDependencies:
     colors "^1.1.2"
 
@@ -3893,6 +3897,8 @@ cli-table3@~0.6.0:
   dependencies:
     object-assign "^4.1.0"
     string-width "^4.2.0"
+=======
+>>>>>>> upstream/main
   optionalDependencies:
     colors "^1.1.2"
 
@@ -4702,6 +4708,7 @@ cypress@^6.4.0:
     untildify "^4.0.0"
     url "^0.11.0"
     yauzl "^2.10.0"
+<<<<<<< HEAD
 
 cypress@^6.4.0:
   version "6.4.0"
@@ -4747,6 +4754,8 @@ cypress@^6.4.0:
     untildify "^4.0.0"
     url "^0.11.0"
     yauzl "^2.10.0"
+=======
+>>>>>>> upstream/main
 
 d@1, d@^1.0.1:
   version "1.0.1"
@@ -5744,11 +5753,6 @@ etag@~1.8.1:
   version "1.8.1"
   resolved "https://registry.yarnpkg.com/etag/-/etag-1.8.1.tgz#41ae2eeb65efa62268aebfea83ac7d79299b0887"
   integrity sha1-Qa4u62XvpiJorr/qg6x9eSmbCIc=
-
-eventemitter2@^6.4.2:
-  version "6.4.3"
-  resolved "https://registry.yarnpkg.com/eventemitter2/-/eventemitter2-6.4.3.tgz#35c563619b13f3681e7eb05cbdaf50f56ba58820"
-  integrity sha512-t0A2msp6BzOf+QAcI6z9XMktLj52OjGQg+8SJH6v5+3uxNpWYRR3wQmfA+6xtMU9kOC59qk9licus5dYcrYkMQ==
 
 eventemitter2@^6.4.2:
   version "6.4.3"
@@ -9393,11 +9397,14 @@ moment@^2.29.1:
   version "2.29.1"
   resolved "https://registry.yarnpkg.com/moment/-/moment-2.29.1.tgz#b2be769fa31940be9eeea6469c075e35006fa3d3"
   integrity sha512-kHmoybcPV8Sqy59DwNDY3Jefr64lK/by/da0ViFcuA4DH0vQg5Q6Ze5VimxkfQNSC+Mls/Kx53s7TjP1RhFEDQ==
+<<<<<<< HEAD
 
 moment@^2.29.1:
   version "2.29.1"
   resolved "https://registry.yarnpkg.com/moment/-/moment-2.29.1.tgz#b2be769fa31940be9eeea6469c075e35006fa3d3"
   integrity sha512-kHmoybcPV8Sqy59DwNDY3Jefr64lK/by/da0ViFcuA4DH0vQg5Q6Ze5VimxkfQNSC+Mls/Kx53s7TjP1RhFEDQ==
+=======
+>>>>>>> upstream/main
 
 move-concurrently@^1.0.1:
   version "1.0.1"
