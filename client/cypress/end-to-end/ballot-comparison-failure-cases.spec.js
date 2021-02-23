@@ -2,7 +2,7 @@ import 'cypress-file-upload'
 
 before(() => cy.exec('./cypress/seed-test-db.sh'))
 
-describe.skip('Ballot Comparison Failure Cases', () => {
+describe('Ballot Comparison Failure Cases', () => {
   const auditAdmin = 'audit-admin-cypress@example.com'
   const jurisdictionAdmin = 'wtarkin@empire.gov'
   const uuid = () => Cypress._.random(0, 1e6)
@@ -41,7 +41,6 @@ describe.skip('Ballot Comparison Failure Cases', () => {
     })
 
     // upload valid jurisdiction filesheet
-    cy.findByText('Replace File').click()
     cy.findAllByText('Upload File').should('have.length',2)
     cy.fixture('CSVs/jurisdiction/sample_jurisdiction_filesheet.csv').then(fileContent => {
       cy.get('input[type="file"]').first().attachFile({
@@ -71,8 +70,9 @@ describe.skip('Ballot Comparison Failure Cases', () => {
     cy.contains("Missing required column: Contest Name.")
 
     // upload valid standardized contests file
-    cy.findByText('Replace File').click()
-    cy.findAllByText('Upload File').should('have.length',2)
+    cy.findAllByText('Replace File').spread((firstButton, secondButton) => {
+      secondButton.click()
+    })
     cy.fixture('CSVs/contest/ballot_comparison_contests.csv').then(fileContent => {
       cy.get('input[type="file"]').last().attachFile({
         fileContent: fileContent.toString(),
@@ -92,6 +92,9 @@ describe.skip('Ballot Comparison Failure Cases', () => {
       const toastText = text;
       expect(toastText).to.equal('Must have at least one targeted contest');
     })
+    cy.get('.Toastify').find('div').should('not.have.class', 'Toastify__bounce-exit--top-right').get('.Toastify__close-button').click()
+
+    cy.findByText('Back').click()
 
     // select targeted contest
     cy.get('input[type="checkbox"]').first().check({ force: true })
@@ -123,7 +126,6 @@ describe.skip('Ballot Comparison Failure Cases', () => {
     // upload valid manifest
     cy.findByText('Replace File').click()
     cy.findAllByText('Upload File').should('have.length',2)
-    cy.findByText(`Jurisdictions - TestAudit${id}`).siblings('button').click()
     cy.fixture('CSVs/manifest/ballot_comparison_manifest.csv').then(fileContent => {
       cy.get('input[type="file"]').first().attachFile({
         fileContent: fileContent.toString(),
@@ -180,7 +182,7 @@ describe.skip('Ballot Comparison Failure Cases', () => {
     cy.findByText('Save & Next').click()
     cy.findByText('Download Audit Board Credentials').click()
     cy.logout(jurisdictionAdmin)
-    cy.task('getPdfContent', `cypress/fixtures/PDFs/Audit Board Credentials\ -\ Death Star\ -\ TestAudit${id}.pdf`).then((content) => {
+    cy.task('getPdfContent', `cypress/downloads/Audit Board Credentials\ -\ Death Star\ -\ TestAudit${id}.pdf`).then((content) => {
     function urlify(text) {
       var urlRegex = /(((https?:\/\/)|(www\.))[^\s]+)/g;
       return text.match(urlRegex, function(url) {
@@ -206,7 +208,7 @@ describe.skip('Ballot Comparison Failure Cases', () => {
     })
 
     // audit all ballots
-    cy.findByText('Return to audit overview')
+    cy.findByText('Return to audit overview').click()
     cy.contains(/Ballot Cards to Audit/)
     cy.get('table tbody tr').each(($el, index, list) => {
       // iterate through exactly the number of ballots available to avoid conditions
@@ -231,7 +233,7 @@ describe.skip('Ballot Comparison Failure Cases', () => {
     })
 
     // correct the audit board member name and signoff
-    cy.findAllByText('Audit Board Member: Board Member 1').siblings('input').type('Board Member 1')
+    cy.findAllByText('Audit Board Member: Board Member 1').siblings('input').clear().type('Board Member 1')
     cy.findByText('Sign Off').should('not.be.disabled').click()
     cy.contains(/Auditing Complete/)
   })
