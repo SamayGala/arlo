@@ -7,7 +7,7 @@ from ..auth import restrict_access, UserType
 from ..database import db_session
 from ..models import *  # pylint: disable=wildcard-import
 from ..util.jsonschema import validate, JSONDict
-from .cvrs import hybrid_contest_choice_vote_counts, HybridNumVotes
+from .cvrs import hybrid_contest_choice_vote_counts
 
 
 CONTEST_CHOICE_SCHEMA = {
@@ -73,10 +73,10 @@ def serialize_contest(contest: Contest) -> JSONDict:
         vote_counts = hybrid_contest_choice_vote_counts(contest)
         for choice in choices:
             choice["numVotesCvr"] = (
-                vote_counts and vote_counts[choice["id"]].num_votes_cvr
+                vote_counts and vote_counts[str(choice["id"])].num_votes_cvr
             )
             choice["numVotesNonCvr"] = (
-                vote_counts and vote_counts[choice["id"]].num_votes_non_cvr
+                vote_counts and vote_counts[str(choice["id"])].num_votes_non_cvr
             )
 
     return {
