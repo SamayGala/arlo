@@ -291,14 +291,22 @@ const Review: React.FC<IProps> = ({
                 style={{
                   border: '1px solid rgb(16 22 26 / 15%)',
                   tableLayout: 'fixed',
-                  width: '250px',
+                  width: auditType === 'HYBRID' ? '380px' : '220px',
                   marginRight: '20px',
                 }}
               >
                 <thead>
                   <tr>
-                    <th style={{ width: '150px' }}>Choice</th>
-                    <th>Votes</th>
+                    <th style={{ width: '140px' }}>Choice</th>
+                    <th style={{ width: '80px' }}>Votes</th>
+                    {auditType === 'HYBRID' && (
+                      <>
+                        <th style={{ width: '80px' }}>CVR Votes</th>
+                        <th style={{ width: '80px', paddingRight: '5px' }}>
+                          Non-CVR Votes
+                        </th>
+                      </>
+                    )}
                   </tr>
                 </thead>
                 <tbody>
@@ -306,6 +314,20 @@ const Review: React.FC<IProps> = ({
                     <tr key={choice.id}>
                       <td>{choice.name}</td>
                       <td>{choice.numVotes.toLocaleString()}</td>
+                      {auditType === 'HYBRID' && (
+                        <>
+                          <td>
+                            {choice.numVotesCvr === null
+                              ? 'Waiting on CVRs'
+                              : choice.numVotesCvr!.toLocaleString()}
+                          </td>
+                          <td>
+                            {choice.numVotesNonCvr === null
+                              ? 'Waiting on CVRs'
+                              : choice.numVotesNonCvr!.toLocaleString()}
+                          </td>
+                        </>
+                      )}
                     </tr>
                   ))}
                 </tbody>
