@@ -38,6 +38,7 @@ import {
 } from '../../useCSV'
 import { ISampleSizes } from '../../useRoundsAuditAdmin'
 import { mapValues } from '../../../../utils/objects'
+import { pluralize } from '../../../../utils/string'
 
 const percentFormatter = new Intl.NumberFormat(undefined, {
   style: 'percent',
@@ -272,78 +273,140 @@ const Review: React.FC<IProps> = ({
             <H5>{contest.name}</H5>
             <Tag
               intent={contest.isTargeted ? Intent.SUCCESS : Intent.PRIMARY}
-              style={
-                {
-                  // marginRight: '15px',
-                  // width: '145px',
-                  // textAlign: 'center',
-                }
-              }
+              style={{ marginLeft: '10px', flexShrink: 0 }}
             >
               {contest.isTargeted ? 'Target Contest' : 'Opportunistic Contest'}
             </Tag>
           </div>
-          <div style={{ display: 'flex', marginTop: '10px' }}>
-            <div>
+          {shouldShowSampleSizes && (
+            <p>
+              {contest.numWinners}{' '}
+              {pluralize('winner', parseInt(contest.numWinners, 10))} -{' '}
+              {contest.votesAllowed}{' '}
+              {pluralize('vote', parseInt(contest.votesAllowed, 10))} allowed -{' '}
+              {contest.totalBallotsCast.toLocaleString()} total ballots cast
+            </p>
+          )}
+          <div style={{ display: 'flex' }}>
+            {!shouldShowSampleSizes ? (
+              <div style={{ minWidth: '300px', marginRight: '20px' }}>
+                Waiting on all jurisdictions to upload CVRs to compute contest
+                settings.
+              </div>
+            ) : (
+              <div>
+                <HTMLTable
+                  condensed
+                  striped
+                  style={{
+                    border: '1px solid rgb(16 22 26 / 15%)',
+                    tableLayout: 'fixed',
+                    width: auditType === 'HYBRID' ? '380px' : '220px',
+                    marginRight: '20px',
+                  }}
+                >
+                  <thead>
+                    <tr>
+                      <th style={{ width: '140px' }}>Choice</th>
+                      <th style={{ width: '80px' }}>Votes</th>
+                      {auditType === 'HYBRID' && (
+                        <>
+                          <th style={{ width: '80px' }}>CVR</th>
+                          <th style={{ width: '80px', paddingRight: '5px' }}>
+                            Non-CVR
+                          </th>
+                        </>
+                      )}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {contest.choices.map(choice => (
+                      <tr key={choice.id}>
+                        <td>{choice.name}</td>
+                        <td>{choice.numVotes.toLocaleString()}</td>
+                        {auditType === 'HYBRID' && (
+                          <>
+                            <td>
+                              {choice.numVotesCvr === null
+                                ? 'Waiting on CVRs'
+                                : choice.numVotesCvr!.toLocaleString()}
+                            </td>
+                            <td>
+                              {choice.numVotesNonCvr === null
+                                ? 'Waiting on CVRs'
+                                : choice.numVotesNonCvr!.toLocaleString()}
+                            </td>
+                          </>
+                        )}
+                      </tr>
+                    ))}
+                  </tbody>
+                </HTMLTable>
+              </div>
+            )}
+            <div
+              style={{
+                // marginTop: '28px',
+                // padding: '7px 10px',
+                // backgroundColor: Colors.LIGHT_GRAY5,
+                width: '100%',
+                height: '100%',
+              }}
+            >
               <HTMLTable
                 condensed
                 striped
                 style={{
                   border: '1px solid rgb(16 22 26 / 15%)',
-                  tableLayout: 'fixed',
-                  width: auditType === 'HYBRID' ? '380px' : '220px',
-                  marginRight: '20px',
+                  // tableLayout: 'fixed',
+                  borderCollapse: 'collapse',
+                  width: '100%',
+                  display: 'block',
                 }}
               >
-                <thead>
+                <thead
+                  style={{
+                    display: 'block',
+                    borderBottom: '1px solid rgb(16 22 26 / 15%)',
+                  }}
+                >
                   <tr>
-                    <th style={{ width: '140px' }}>Choice</th>
-                    <th style={{ width: '80px' }}>Votes</th>
-                    {auditType === 'HYBRID' && (
-                      <>
-                        <th style={{ width: '80px' }}>CVR Votes</th>
-                        <th style={{ width: '80px', paddingRight: '5px' }}>
-                          Non-CVR Votes
-                        </th>
-                      </>
-                    )}
+                    <th>
+                      Contest universe: {contest.jurisdictionIds.length}/
+                      {jurisdictions.length} jurisdictions
+                    </th>
                   </tr>
                 </thead>
-                <tbody>
-                  {contest.choices.map(choice => (
-                    <tr key={choice.id}>
-                      <td>{choice.name}</td>
-                      <td>{choice.numVotes.toLocaleString()}</td>
-                      {auditType === 'HYBRID' && (
-                        <>
-                          <td>
-                            {choice.numVotesCvr === null
-                              ? 'Waiting on CVRs'
-                              : choice.numVotesCvr!.toLocaleString()}
-                          </td>
-                          <td>
-                            {choice.numVotesNonCvr === null
-                              ? 'Waiting on CVRs'
-                              : choice.numVotesNonCvr!.toLocaleString()}
-                          </td>
-                        </>
-                      )}
+                <tbody
+                  style={{
+                    display: 'block',
+                    overflowY: 'auto',
+                    width: '100%',
+                    maxHeight: '200px', // TODO match to choice table somehow
+                  }}
+                >
+                  {contest.jurisdictionIds.map(jurisdictionId => (
+                    <tr
+                      style={{
+                        display: 'block',
+                        width: '100%',
+                      }}
+                      key={jurisdictionId}
+                    >
+                      <td
+                        style={{
+                          color: Colors.DARK_GRAY5,
+                          display: 'block',
+                          width: '100%',
+                          boxShadow: 'none',
+                        }}
+                      >
+                        {jurisdictionIdToName[jurisdictionId]}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
               </HTMLTable>
-            </div>
-            <div>
-              <div style={{ fontWeight: 'bold', padding: '7px 0' }}>
-                Contest Universe: {contest.jurisdictionIds.length}/
-                {jurisdictions.length} jurisdictions
-              </div>
-              <div style={{ color: Colors.GRAY1 }}>
-                {contest.jurisdictionIds.length < jurisdictions.length &&
-                  contest.jurisdictionIds
-                    .map(jurisdictionId => jurisdictionIdToName[jurisdictionId])
-                    .join(', ')}
-              </div>
             </div>
           </div>
         </Card>
@@ -387,7 +450,7 @@ const Review: React.FC<IProps> = ({
                       return (
                         <Card key={contest.id}>
                           <FormSectionDescription>
-                            <H4>{contest.name}</H4>
+                            <H5>{contest.name}</H5>
                             <RadioGroup
                               name={`sampleSizes[${contest.id}]`}
                               onChange={e => {
