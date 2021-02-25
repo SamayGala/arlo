@@ -30,9 +30,9 @@ from ..util.group_by import group_by
 
 
 def set_contest_metadata_from_cvrs(contest: Contest):
-    # Only set the contest metadata if it hasn't been set already
-    if contest.total_ballots_cast is not None:
-        return
+    # # Only set the contest metadata if it hasn't been set already
+    # if contest.total_ballots_cast is not None:
+    #     return
 
     contest.total_ballots_cast = 0
 
@@ -41,7 +41,9 @@ def set_contest_metadata_from_cvrs(contest: Contest):
             JSONDict, jurisdiction.cvr_contests_metadata
         )
         if not cvr_contests_metadata or contest.name not in cvr_contests_metadata:
-            raise Conflict("Some jurisdictions haven't uploaded their CVRs yet.")
+            continue
+            # TODO move this to review screen
+            # raise Conflict("Some jurisdictions haven't uploaded their CVRs yet.")
 
         contest_metadata = cvr_contests_metadata[contest.name]
 
@@ -85,7 +87,12 @@ def hybrid_contest_choice_vote_counts(
 
         contest_metadata = cvr_contests_metadata[contest.name]
         for choice_name, choice_metadata in contest_metadata["choices"].items():
-            choice = next(c for c in contest.choices if c.name == choice_name)
+            choice = next((c for c in contest.choices if c.name == choice_name), None)
+            if not choice:
+                return None
+                # raise Conflict(
+                #     f"Choice {choice_name} from contest {contest.name} was not found in the CVR for jurisdiction {jurisdiction.name}"
+                # )
             cvr_choice_votes[choice.id] += choice_metadata["num_votes"]
 
     return {
@@ -275,6 +282,10 @@ def process_cvr_file(session: Session, jurisdiction: Jurisdiction, file: File):
                 raise exc
             finally:
                 connection.close()
+
+        if jurisdiction.election.audit_type == AuditType.BALLOT_COMPARISON:
+            for contest in jurisdiction.contests:
+                set_contest_metadata_from_cvrs(contest)
 
     # Until we add validation/error handling to our CVR parsing, we'll just
     # catch all errors and wrap them with a generic message.
