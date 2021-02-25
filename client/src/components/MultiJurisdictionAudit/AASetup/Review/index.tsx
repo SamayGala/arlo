@@ -1,6 +1,18 @@
 import React, { useState } from 'react'
 import { useParams, useHistory, Link } from 'react-router-dom'
-import { H4, Callout, RadioGroup, Radio, Spinner } from '@blueprintjs/core'
+import {
+  H4,
+  Callout,
+  RadioGroup,
+  Radio,
+  Spinner,
+  Card,
+  H5,
+  HTMLTable,
+  Intent,
+  Tag,
+  Colors,
+} from '@blueprintjs/core'
 import { Formik, FormikProps, getIn, Field } from 'formik'
 import FormButtonBar from '../../../Atoms/Form/FormButtonBar'
 import FormButton from '../../../Atoms/Form/FormButton'
@@ -8,13 +20,11 @@ import { ISidebarMenuItem } from '../../../Atoms/Sidebar'
 import H2Title from '../../../Atoms/H2Title'
 import useAuditSettings from '../../useAuditSettings'
 import useContests from '../../useContests'
-import { IContest } from '../../../../types'
 import useJurisdictions from '../../useJurisdictions'
 import { testNumber } from '../../../utilities'
 import FormSection, {
   FormSectionDescription,
 } from '../../../Atoms/Form/FormSection'
-import ContestsTable from './ContestsTable'
 import SettingsTable from './SettingsTable'
 import { isSetupComplete } from '../../StatusBox'
 import ConfirmLaunch from './ConfirmLaunch'
@@ -92,26 +102,9 @@ const Review: React.FC<IProps> = ({
     auditType,
   } = auditSettings
 
-  const targetedContests = contests
-    .filter(c => c.isTargeted === true)
-    .map(c => ({
-      ...c,
-      jurisdictionIds: c.jurisdictionIds.map(j =>
-        jurisdictions.length > 0
-          ? jurisdictions.find(p => p.id === j)!.name
-          : ''
-      ),
-    }))
-  const opportunisticContests = contests
-    .filter(c => c.isTargeted === false)
-    .map(c => ({
-      ...c,
-      jurisdictionIds: c.jurisdictionIds.map(j =>
-        jurisdictions.length > 0
-          ? jurisdictions.find(p => p.id === j)!.name
-          : ''
-      ),
-    }))
+  const jurisdictionIdToName = Object.fromEntries(
+    jurisdictions.map(({ id, name }) => [id, name])
+  )
 
   // Add custom option to sample size options from backend
   sampleSizeOptions =
@@ -199,7 +192,7 @@ const Review: React.FC<IProps> = ({
       </Callout>
       <br />
       <H4>Audit Settings</H4>
-      <ElevatedCard>
+      <Card>
         <SettingsTable>
           <tbody>
             <tr>
@@ -242,7 +235,7 @@ const Review: React.FC<IProps> = ({
                 </a>
               </td>
             </tr>
-            {auditType === 'BALLOT_COMPARISON' && (
+            {['BALLOT_COMPARISON', 'HYBRID'].includes(auditType) && (
               <tr>
                 <td>Standardized Contests:</td>
                 <td>
@@ -264,39 +257,75 @@ const Review: React.FC<IProps> = ({
             </tr>
           </tbody>
         </SettingsTable>
-        <ContestsTable>
-          <thead>
-            <tr>
-              <th>Target Contests</th>
-              <th>Jurisdictions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {targetedContests.map((c: IContest) => (
-              <tr key={c.id}>
-                <td>{c.name}</td>
-                <td>{c.jurisdictionIds.join(', ')}</td>
-              </tr>
-            ))}
-          </tbody>
-        </ContestsTable>
-        <ContestsTable>
-          <thead>
-            <tr>
-              <th>Opportunistic Contests</th>
-              <th>Jurisdictions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {opportunisticContests.map((c: IContest) => (
-              <tr key={c.id}>
-                <td>{c.name}</td>
-                <td>{c.jurisdictionIds.join(', ')}</td>
-              </tr>
-            ))}
-          </tbody>
-        </ContestsTable>
-      </ElevatedCard>
+      </Card>
+      <br />
+      <H4>Contests</H4>
+      {contests.map(contest => (
+        <Card key={contest.id}>
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'baseline',
+            }}
+          >
+            <H5>{contest.name}</H5>
+            <Tag
+              intent={contest.isTargeted ? Intent.SUCCESS : Intent.PRIMARY}
+              style={
+                {
+                  // marginRight: '15px',
+                  // width: '145px',
+                  // textAlign: 'center',
+                }
+              }
+            >
+              {contest.isTargeted ? 'Target Contest' : 'Opportunistic Contest'}
+            </Tag>
+          </div>
+          <div style={{ display: 'flex', marginTop: '10px' }}>
+            <div>
+              <HTMLTable
+                condensed
+                striped
+                style={{
+                  border: '1px solid rgb(16 22 26 / 15%)',
+                  tableLayout: 'fixed',
+                  width: '250px',
+                  marginRight: '20px',
+                }}
+              >
+                <thead>
+                  <tr>
+                    <th style={{ width: '150px' }}>Choice</th>
+                    <th>Votes</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {contest.choices.map(choice => (
+                    <tr key={choice.id}>
+                      <td>{choice.name}</td>
+                      <td>{choice.numVotes.toLocaleString()}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </HTMLTable>
+            </div>
+            <div>
+              <div style={{ fontWeight: 'bold', padding: '7px 0' }}>
+                Contest Universe: {contest.jurisdictionIds.length}/
+                {jurisdictions.length} jurisdictions
+              </div>
+              <div style={{ color: Colors.GRAY1 }}>
+                {contest.jurisdictionIds.length < jurisdictions.length &&
+                  contest.jurisdictionIds
+                    .map(jurisdictionId => jurisdictionIdToName[jurisdictionId])
+                    .join(', ')}
+              </div>
+            </div>
+          </div>
+        </Card>
+      ))}
       <br />
       <H4>Sample Size</H4>
       <Formik
@@ -329,85 +358,89 @@ const Review: React.FC<IProps> = ({
                     Choose the initial sample size for each contest you would
                     like to use for Round 1 of the audit from the options below.
                   </FormSectionDescription>
-                  {targetedContests.map(contest => {
-                    const currentOption = values.sampleSizes[contest.id]
-                    return (
-                      <ElevatedCard key={contest.id}>
-                        <FormSectionDescription>
-                          <H4>{contest.name}</H4>
-                          <RadioGroup
-                            name={`sampleSizes[${contest.id}]`}
-                            onChange={e => {
-                              const selectedOption = sampleSizeOptions![
-                                contest.id
-                              ].find(c => c.key === e.currentTarget.value)
-                              setFieldValue(
-                                `sampleSizes[${contest.id}]`,
-                                selectedOption
-                              )
-                            }}
-                            selectedValue={getIn(
-                              values,
-                              `sampleSizes[${contest.id}][key]`
-                            )}
-                            disabled={locked}
-                          >
-                            {sampleSizeOptions![contest.id].map(
-                              (option: ISampleSizeOption) => {
-                                return option.key === 'custom' ? (
-                                  <Radio value="custom" key={option.key}>
-                                    Enter your own sample size (not recommended)
-                                  </Radio>
-                                ) : (
-                                  <Radio value={option.key} key={option.key}>
-                                    {option.key === 'all-ballots' &&
-                                      'All ballots: '}
-                                    {option.key === 'asn'
-                                      ? 'BRAVO Average Sample Number: '
-                                      : ''}
-                                    {`${Number(
-                                      option.size
-                                    ).toLocaleString()} samples`}
-                                    {option.prob
-                                      ? ` (${percentFormatter.format(
-                                          option.prob
-                                        )} chance of reaching risk limit and completing the audit in one round)`
-                                      : ''}
-                                    {option.key === 'all-ballots' &&
-                                      ' (recommended for this contest due to the small margin of victory)'}
-                                  </Radio>
-                                )
-                              }
-                            )}
-                          </RadioGroup>
-                          {currentOption && currentOption.key === 'custom' && (
-                            <Field
-                              component={FormField}
-                              name={`sampleSizes[${contest.id}].size`}
-                              value={
-                                currentOption.size === null
-                                  ? undefined
-                                  : currentOption.size
-                              }
-                              onValueChange={(value: number) =>
+                  {contests
+                    .filter(contest => contest.isTargeted)
+                    .map(contest => {
+                      const currentOption = values.sampleSizes[contest.id]
+                      return (
+                        <Card key={contest.id}>
+                          <FormSectionDescription>
+                            <H4>{contest.name}</H4>
+                            <RadioGroup
+                              name={`sampleSizes[${contest.id}]`}
+                              onChange={e => {
+                                const selectedOption = sampleSizeOptions![
+                                  contest.id
+                                ].find(c => c.key === e.currentTarget.value)
                                 setFieldValue(
-                                  `sampleSizes[${contest.id}].size`,
-                                  value
+                                  `sampleSizes[${contest.id}]`,
+                                  selectedOption
                                 )
-                              }
-                              type="number"
-                              validate={validateCustomSampleSize(
-                                contest.totalBallotsCast,
-                                contest.jurisdictionIds,
-                                contest.name
+                              }}
+                              selectedValue={getIn(
+                                values,
+                                `sampleSizes[${contest.id}][key]`
                               )}
                               disabled={locked}
-                            />
-                          )}
-                        </FormSectionDescription>
-                      </ElevatedCard>
-                    )
-                  })}
+                            >
+                              {sampleSizeOptions![contest.id].map(
+                                (option: ISampleSizeOption) => {
+                                  return option.key === 'custom' ? (
+                                    <Radio value="custom" key={option.key}>
+                                      Enter your own sample size (not
+                                      recommended)
+                                    </Radio>
+                                  ) : (
+                                    <Radio value={option.key} key={option.key}>
+                                      {option.key === 'all-ballots' &&
+                                        'All ballots: '}
+                                      {option.key === 'asn'
+                                        ? 'BRAVO Average Sample Number: '
+                                        : ''}
+                                      {`${Number(
+                                        option.size
+                                      ).toLocaleString()} samples`}
+                                      {option.prob
+                                        ? ` (${percentFormatter.format(
+                                            option.prob
+                                          )} chance of reaching risk limit and completing the audit in one round)`
+                                        : ''}
+                                      {option.key === 'all-ballots' &&
+                                        ' (recommended for this contest due to the small margin of victory)'}
+                                    </Radio>
+                                  )
+                                }
+                              )}
+                            </RadioGroup>
+                            {currentOption &&
+                              currentOption.key === 'custom' && (
+                                <Field
+                                  component={FormField}
+                                  name={`sampleSizes[${contest.id}].size`}
+                                  value={
+                                    currentOption.size === null
+                                      ? undefined
+                                      : currentOption.size
+                                  }
+                                  onValueChange={(value: number) =>
+                                    setFieldValue(
+                                      `sampleSizes[${contest.id}].size`,
+                                      value
+                                    )
+                                  }
+                                  type="number"
+                                  validate={validateCustomSampleSize(
+                                    contest.totalBallotsCast,
+                                    contest.jurisdictionIds,
+                                    contest.name
+                                  )}
+                                  disabled={locked}
+                                />
+                              )}
+                          </FormSectionDescription>
+                        </Card>
+                      )
+                    })}
                 </FormSection>
               )
             ) : (

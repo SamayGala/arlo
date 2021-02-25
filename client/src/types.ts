@@ -12,6 +12,8 @@ export interface ICandidate {
   id: string
   name: string
   numVotes: number | string
+  numVotesCvr?: number | null
+  numVotesNonCvr?: number | null
 }
 
 export interface IContest {

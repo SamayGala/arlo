@@ -60,8 +60,7 @@ def sample_size_options(
             )
             return {"macro": {"key": "macro", "size": sample_size, "prob": None}}
 
-        else:
-            assert election.audit_type == AuditType.BALLOT_COMPARISON
+        elif election.audit_type == AuditType.BALLOT_COMPARISON:
 
             set_contest_metadata_from_cvrs(contest)
             contest_for_sampler = sampler_contest.from_db_contest(contest)
@@ -96,6 +95,10 @@ def sample_size_options(
             return {
                 "supersimple": {"key": "supersimple", "size": sample_size, "prob": None}
             }
+
+        else:
+            assert election.audit_type == AuditType.HYBRID
+            return {}  # TODO
 
     targeted_contests = Contest.query.filter_by(
         election_id=election.id, is_targeted=True
