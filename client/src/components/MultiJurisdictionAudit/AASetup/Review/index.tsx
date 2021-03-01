@@ -8,10 +8,8 @@ import {
   Spinner,
   Card,
   H5,
-  HTMLTable,
   Intent,
   Tag,
-  Colors,
 } from '@blueprintjs/core'
 import { Formik, FormikProps, getIn, Field } from 'formik'
 import FormButtonBar from '../../../Atoms/Form/FormButtonBar'
@@ -26,10 +24,9 @@ import FormSection, {
   FormSectionDescription,
 } from '../../../Atoms/Form/FormSection'
 import SettingsTable from './SettingsTable'
-import { isSetupComplete } from '../../StatusBox'
+import { isSetupComplete, areCvrsUploaded } from '../../StatusBox'
 import ConfirmLaunch from './ConfirmLaunch'
 import FormField from '../../../Atoms/Form/FormField'
-import ElevatedCard from '../../../Atoms/SpacedCard'
 import useSampleSizes, { ISampleSizeOption } from './useSampleSizes'
 import {
   useJurisdictionsFile,
@@ -39,6 +36,7 @@ import {
 import { ISampleSizes } from '../../useRoundsAuditAdmin'
 import { mapValues } from '../../../../utils/objects'
 import { pluralize } from '../../../../utils/string'
+import { FlexTable } from '../../../Atoms/Table'
 
 const percentFormatter = new Intl.NumberFormat(undefined, {
   style: 'percent',
@@ -73,7 +71,7 @@ const Review: React.FC<IProps> = ({
   const history = useHistory()
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false)
 
-  const shouldShowSampleSizes =
+  const setupComplete =
     !!jurisdictions &&
     !!contests &&
     !!auditSettings &&
@@ -81,7 +79,7 @@ const Review: React.FC<IProps> = ({
   // eslint-disable-next-line prefer-const
   let [sampleSizeOptions, selectedSampleSizes] = useSampleSizes(
     electionId,
-    shouldShowSampleSizes
+    setupComplete
   ) || [null, null]
 
   if (!jurisdictions || !contests || !auditSettings) return null // Still loading
@@ -124,11 +122,13 @@ const Review: React.FC<IProps> = ({
         : mapValues(sampleSizeOptions, options => options[0])
       : {}
 
-  const participatingJurisdictions = contests
-    ? jurisdictions.filter(({ id }) =>
-        contests.some(c => c.jurisdictionIds.includes(id))
-      )
-    : []
+  const participatingJurisdictions = jurisdictions.filter(({ id }) =>
+    contests.some(c => c.jurisdictionIds.includes(id))
+  )
+
+  const cvrsUploaded =
+    !['BALLOT_COMPARISON', 'HYBRID'].includes(auditSettings.auditType) ||
+    areCvrsUploaded(participatingJurisdictions)
 
   const numManifestUploadsComplete = participatingJurisdictions.filter(j =>
     isFileProcessed(j.ballotManifest)
@@ -278,7 +278,7 @@ const Review: React.FC<IProps> = ({
               {contest.isTargeted ? 'Target Contest' : 'Opportunistic Contest'}
             </Tag>
           </div>
-          {shouldShowSampleSizes && (
+          {cvrsUploaded && (
             <p>
               {contest.numWinners}{' '}
               {pluralize('winner', parseInt(contest.numWinners, 10))} -{' '}
@@ -288,33 +288,30 @@ const Review: React.FC<IProps> = ({
             </p>
           )}
           <div style={{ display: 'flex' }}>
-            {!shouldShowSampleSizes ? (
+            {!cvrsUploaded ? (
               <div style={{ minWidth: '300px', marginRight: '20px' }}>
                 Waiting on all jurisdictions to upload CVRs to compute contest
                 settings.
               </div>
             ) : (
               <div>
-                <HTMLTable
+                <FlexTable
                   condensed
                   striped
                   style={{
-                    border: '1px solid rgb(16 22 26 / 15%)',
                     tableLayout: 'fixed',
-                    width: auditType === 'HYBRID' ? '380px' : '220px',
+                    width: auditType === 'HYBRID' ? '420px' : '280px',
                     marginRight: '20px',
                   }}
                 >
                   <thead>
                     <tr>
-                      <th style={{ width: '140px' }}>Choice</th>
-                      <th style={{ width: '80px' }}>Votes</th>
+                      <th>Choice</th>
+                      <th>Votes</th>
                       {auditType === 'HYBRID' && (
                         <>
-                          <th style={{ width: '80px' }}>CVR</th>
-                          <th style={{ width: '80px', paddingRight: '5px' }}>
-                            Non-CVR
-                          </th>
+                          <th>CVR</th>
+                          <th>Non-CVR</th>
                         </>
                       )}
                     </tr>
@@ -326,50 +323,32 @@ const Review: React.FC<IProps> = ({
                         <td>{choice.numVotes.toLocaleString()}</td>
                         {auditType === 'HYBRID' && (
                           <>
-                            <td>
-                              {choice.numVotesCvr === null
-                                ? 'Waiting on CVRs'
-                                : choice.numVotesCvr!.toLocaleString()}
-                            </td>
-                            <td>
-                              {choice.numVotesNonCvr === null
-                                ? 'Waiting on CVRs'
-                                : choice.numVotesNonCvr!.toLocaleString()}
-                            </td>
+                            <td>{choice.numVotesCvr!.toLocaleString()}</td>
+                            <td>{choice.numVotesNonCvr!.toLocaleString()}</td>
                           </>
                         )}
                       </tr>
                     ))}
                   </tbody>
-                </HTMLTable>
+                </FlexTable>
               </div>
             )}
             <div
               style={{
-                // marginTop: '28px',
-                // padding: '7px 10px',
-                // backgroundColor: Colors.LIGHT_GRAY5,
                 width: '100%',
-                height: '100%',
+                position: 'relative',
+                minHeight: '150px',
               }}
             >
-              <HTMLTable
+              <FlexTable
                 condensed
                 striped
+                scrollable
                 style={{
-                  border: '1px solid rgb(16 22 26 / 15%)',
-                  // tableLayout: 'fixed',
-                  borderCollapse: 'collapse',
-                  width: '100%',
-                  display: 'block',
+                  position: 'absolute',
                 }}
               >
-                <thead
-                  style={{
-                    display: 'block',
-                    borderBottom: '1px solid rgb(16 22 26 / 15%)',
-                  }}
-                >
+                <thead>
                   <tr>
                     <th>
                       Contest universe: {contest.jurisdictionIds.length}/
@@ -377,36 +356,14 @@ const Review: React.FC<IProps> = ({
                     </th>
                   </tr>
                 </thead>
-                <tbody
-                  style={{
-                    display: 'block',
-                    overflowY: 'auto',
-                    width: '100%',
-                    maxHeight: '200px', // TODO match to choice table somehow
-                  }}
-                >
+                <tbody>
                   {contest.jurisdictionIds.map(jurisdictionId => (
-                    <tr
-                      style={{
-                        display: 'block',
-                        width: '100%',
-                      }}
-                      key={jurisdictionId}
-                    >
-                      <td
-                        style={{
-                          color: Colors.DARK_GRAY5,
-                          display: 'block',
-                          width: '100%',
-                          boxShadow: 'none',
-                        }}
-                      >
-                        {jurisdictionIdToName[jurisdictionId]}
-                      </td>
+                    <tr key={jurisdictionId}>
+                      <td>{jurisdictionIdToName[jurisdictionId]}</td>
                     </tr>
                   ))}
                 </tbody>
-              </HTMLTable>
+              </FlexTable>
             </div>
           </div>
         </Card>
@@ -429,7 +386,7 @@ const Review: React.FC<IProps> = ({
           sampleSizes: IFormOptions
         }>) => (
           <form>
-            {shouldShowSampleSizes ? (
+            {setupComplete ? (
               sampleSizeOptions === null ? (
                 <div style={{ display: 'flex' }}>
                   <Spinner size={Spinner.SIZE_SMALL} />
