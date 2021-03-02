@@ -80,6 +80,14 @@ const downloadJurisdictionAdminReport = (
   apiDownload(`/election/${electionId}/jurisdiction/${jurisdictionId}/report`)
 }
 
+export const areCvrsUploaded = (jurisdictions: IJurisdiction[]): boolean =>
+  jurisdictions.every(
+    ({ cvrs }) =>
+      cvrs &&
+      cvrs.processing &&
+      cvrs.processing.status === FileProcessingStatus.PROCESSED
+  )
+
 export const isSetupComplete = (
   jurisdictions: IJurisdiction[],
   contests: IContest[],
@@ -90,6 +98,7 @@ export const isSetupComplete = (
   if (!contests.some(c => c.isTargeted)) return false
 
   if (Object.values(auditSettings).some(v => v === null)) return false
+
   const participatingJurisdictions = jurisdictions.filter(({ id }) =>
     contests.some(c => c.jurisdictionIds.includes(id))
   )
@@ -107,17 +116,9 @@ export const isSetupComplete = (
       return false
   }
 
-  // In ballot comparison audits, all jurisdictions must upload CVRs
-  if (auditSettings.auditType === 'BALLOT_COMPARISON') {
-    if (
-      !participatingJurisdictions.every(
-        ({ cvrs }) =>
-          cvrs &&
-          cvrs.processing &&
-          cvrs.processing.status === FileProcessingStatus.PROCESSED
-      )
-    )
-      return false
+  // In ballot comparison/hybrid audits, all jurisdictions must upload CVRs
+  if (['BALLOT_COMPARISON', 'HYBRID'].includes(auditSettings.auditType)) {
+    if (!areCvrsUploaded(participatingJurisdictions)) return false
   }
 
   return true
