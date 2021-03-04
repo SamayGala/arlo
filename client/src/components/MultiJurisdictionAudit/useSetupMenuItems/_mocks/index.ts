@@ -60,6 +60,16 @@ export const auditSettings: {
     auditMathType: 'SUPERSIMPLE',
     auditName: 'Test Audit',
   },
+  blankHybrid: {
+    state: null,
+    electionName: null,
+    online: null,
+    randomSeed: null,
+    riskLimit: null,
+    auditType: 'HYBRID',
+    auditMathType: 'SUITE',
+    auditName: 'Test Audit',
+  },
   onlyState: {
     state: 'AL',
     electionName: null,
@@ -118,6 +128,16 @@ export const auditSettings: {
     riskLimit: 10,
     auditType: 'BALLOT_COMPARISON',
     auditMathType: 'SUPERSIMPLE',
+    auditName: 'Test Audit',
+  },
+  hybridAll: {
+    state: 'AL',
+    electionName: 'Election Name',
+    online: false,
+    randomSeed: '12345',
+    riskLimit: 10,
+    auditType: 'HYBRID',
+    auditMathType: 'SUITE',
     auditName: 'Test Audit',
   },
 }
