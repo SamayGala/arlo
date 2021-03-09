@@ -3428,7 +3428,7 @@ exports[`Setup renders Review & Launch stage 1`] = `
                   0
                   /
                   3
-                   jurisdictions
+                   jurisdictions
                 </th>
               </tr>
             </thead>
@@ -3668,7 +3668,7 @@ exports[`Setup renders Review & Launch stage with locked next stage 1`] = `
                   0
                   /
                   3
-                   jurisdictions
+                   jurisdictions
                 </th>
               </tr>
             </thead>
@@ -3908,7 +3908,7 @@ exports[`Setup renders Review & Launch stage with processing next stage 1`] = `
                   0
                   /
                   3
-                   jurisdictions
+                   jurisdictions
                 </th>
               </tr>
             </thead>
