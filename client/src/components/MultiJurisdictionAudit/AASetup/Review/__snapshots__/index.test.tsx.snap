@@ -163,7 +163,7 @@ exports[`Audit Setup > Review & Launch custom sample size validation - ballot co
       >
         <div>
           <table
-            class="bp3-html-table bp3-html-table-condensed bp3-html-table-striped sc-jKJlTe hDGQko"
+            class="bp3-html-table bp3-html-table-condensed bp3-html-table-striped sc-eNQAEJ gdQBFi"
             style="width: 280px; margin-right: 20px;"
           >
             <thead>
@@ -200,7 +200,7 @@ exports[`Audit Setup > Review & Launch custom sample size validation - ballot co
           style="width: 100%; position: relative; min-height: 140px;"
         >
           <table
-            class="bp3-html-table bp3-html-table-condensed bp3-html-table-striped sc-jKJlTe uqzjr"
+            class="bp3-html-table bp3-html-table-condensed bp3-html-table-striped sc-eNQAEJ cPYOSb"
             style="position: absolute; height: 100%;"
           >
             <thead>
@@ -210,7 +210,7 @@ exports[`Audit Setup > Review & Launch custom sample size validation - ballot co
                   2
                   /
                   3
-                   jurisdictions
+                   jurisdictions
                 </th>
               </tr>
             </thead>
@@ -251,11 +251,11 @@ exports[`Audit Setup > Review & Launch custom sample size validation - ballot co
           <div
             class="sc-dnqmqq kGMqKN"
           >
-            <h4
+            <h5
               class="bp3-heading"
             >
               Contest Name
-            </h4>
+            </h5>
             <div>
               <label
                 class="bp3-control bp3-radio"
@@ -512,7 +512,7 @@ exports[`Audit Setup > Review & Launch custom sample size validation - batch com
       >
         <div>
           <table
-            class="bp3-html-table bp3-html-table-condensed bp3-html-table-striped sc-jKJlTe hDGQko"
+            class="bp3-html-table bp3-html-table-condensed bp3-html-table-striped sc-eNQAEJ gdQBFi"
             style="width: 280px; margin-right: 20px;"
           >
             <thead>
@@ -549,7 +549,7 @@ exports[`Audit Setup > Review & Launch custom sample size validation - batch com
           style="width: 100%; position: relative; min-height: 140px;"
         >
           <table
-            class="bp3-html-table bp3-html-table-condensed bp3-html-table-striped sc-jKJlTe uqzjr"
+            class="bp3-html-table bp3-html-table-condensed bp3-html-table-striped sc-eNQAEJ cPYOSb"
             style="position: absolute; height: 100%;"
           >
             <thead>
@@ -559,7 +559,7 @@ exports[`Audit Setup > Review & Launch custom sample size validation - batch com
                   2
                   /
                   3
-                   jurisdictions
+                   jurisdictions
                 </th>
               </tr>
             </thead>
@@ -600,11 +600,11 @@ exports[`Audit Setup > Review & Launch custom sample size validation - batch com
           <div
             class="sc-dnqmqq kGMqKN"
           >
-            <h4
+            <h5
               class="bp3-heading"
             >
               Contest Name
-            </h4>
+            </h5>
             <div>
               <label
                 class="bp3-control bp3-radio"
@@ -861,7 +861,7 @@ exports[`Audit Setup > Review & Launch renders empty state 1`] = `
       >
         <div>
           <table
-            class="bp3-html-table bp3-html-table-condensed bp3-html-table-striped sc-jKJlTe hDGQko"
+            class="bp3-html-table bp3-html-table-condensed bp3-html-table-striped sc-eNQAEJ gdQBFi"
             style="width: 280px; margin-right: 20px;"
           >
             <thead>
@@ -898,7 +898,7 @@ exports[`Audit Setup > Review & Launch renders empty state 1`] = `
           style="width: 100%; position: relative; min-height: 140px;"
         >
           <table
-            class="bp3-html-table bp3-html-table-condensed bp3-html-table-striped sc-jKJlTe uqzjr"
+            class="bp3-html-table bp3-html-table-condensed bp3-html-table-striped sc-eNQAEJ cPYOSb"
             style="position: absolute; height: 100%;"
           >
             <thead>
@@ -908,7 +908,7 @@ exports[`Audit Setup > Review & Launch renders empty state 1`] = `
                   2
                   /
                   3
-                   jurisdictions
+                   jurisdictions
                 </th>
               </tr>
             </thead>
@@ -949,11 +949,11 @@ exports[`Audit Setup > Review & Launch renders empty state 1`] = `
           <div
             class="sc-dnqmqq kGMqKN"
           >
-            <h4
+            <h5
               class="bp3-heading"
             >
               Contest Name
-            </h4>
+            </h5>
             <div>
               <label
                 class="bp3-control bp3-radio"
@@ -1210,7 +1210,7 @@ exports[`Audit Setup > Review & Launch renders full state 1`] = `
       >
         <div>
           <table
-            class="bp3-html-table bp3-html-table-condensed bp3-html-table-striped sc-jKJlTe hDGQko"
+            class="bp3-html-table bp3-html-table-condensed bp3-html-table-striped sc-eNQAEJ gdQBFi"
             style="width: 280px; margin-right: 20px;"
           >
             <thead>
@@ -1247,7 +1247,7 @@ exports[`Audit Setup > Review & Launch renders full state 1`] = `
           style="width: 100%; position: relative; min-height: 140px;"
         >
           <table
-            class="bp3-html-table bp3-html-table-condensed bp3-html-table-striped sc-jKJlTe uqzjr"
+            class="bp3-html-table bp3-html-table-condensed bp3-html-table-striped sc-eNQAEJ cPYOSb"
             style="position: absolute; height: 100%;"
           >
             <thead>
@@ -1257,7 +1257,7 @@ exports[`Audit Setup > Review & Launch renders full state 1`] = `
                   2
                   /
                   3
-                   jurisdictions
+                   jurisdictions
                 </th>
               </tr>
             </thead>
@@ -1298,11 +1298,11 @@ exports[`Audit Setup > Review & Launch renders full state 1`] = `
           <div
             class="sc-dnqmqq kGMqKN"
           >
-            <h4
+            <h5
               class="bp3-heading"
             >
               Contest Name
-            </h4>
+            </h5>
             <div>
               <label
                 class="bp3-control bp3-radio"
@@ -1559,7 +1559,7 @@ exports[`Audit Setup > Review & Launch renders full state with batch comparison 
       >
         <div>
           <table
-            class="bp3-html-table bp3-html-table-condensed bp3-html-table-striped sc-jKJlTe hDGQko"
+            class="bp3-html-table bp3-html-table-condensed bp3-html-table-striped sc-eNQAEJ gdQBFi"
             style="width: 280px; margin-right: 20px;"
           >
             <thead>
@@ -1596,7 +1596,7 @@ exports[`Audit Setup > Review & Launch renders full state with batch comparison 
           style="width: 100%; position: relative; min-height: 140px;"
         >
           <table
-            class="bp3-html-table bp3-html-table-condensed bp3-html-table-striped sc-jKJlTe uqzjr"
+            class="bp3-html-table bp3-html-table-condensed bp3-html-table-striped sc-eNQAEJ cPYOSb"
             style="position: absolute; height: 100%;"
           >
             <thead>
@@ -1606,7 +1606,7 @@ exports[`Audit Setup > Review & Launch renders full state with batch comparison 
                   2
                   /
                   3
-                   jurisdictions
+                   jurisdictions
                 </th>
               </tr>
             </thead>
@@ -1647,11 +1647,11 @@ exports[`Audit Setup > Review & Launch renders full state with batch comparison 
           <div
             class="sc-dnqmqq kGMqKN"
           >
-            <h4
+            <h5
               class="bp3-heading"
             >
               Contest Name
-            </h4>
+            </h5>
             <div>
               <label
                 class="bp3-control bp3-radio"
@@ -1908,7 +1908,7 @@ exports[`Audit Setup > Review & Launch renders full state with batch comparison 
       >
         <div>
           <table
-            class="bp3-html-table bp3-html-table-condensed bp3-html-table-striped sc-jKJlTe hDGQko"
+            class="bp3-html-table bp3-html-table-condensed bp3-html-table-striped sc-eNQAEJ gdQBFi"
             style="width: 280px; margin-right: 20px;"
           >
             <thead>
@@ -1945,7 +1945,7 @@ exports[`Audit Setup > Review & Launch renders full state with batch comparison 
           style="width: 100%; position: relative; min-height: 140px;"
         >
           <table
-            class="bp3-html-table bp3-html-table-condensed bp3-html-table-striped sc-jKJlTe uqzjr"
+            class="bp3-html-table bp3-html-table-condensed bp3-html-table-striped sc-eNQAEJ cPYOSb"
             style="position: absolute; height: 100%;"
           >
             <thead>
@@ -1955,7 +1955,7 @@ exports[`Audit Setup > Review & Launch renders full state with batch comparison 
                   2
                   /
                   3
-                   jurisdictions
+                   jurisdictions
                 </th>
               </tr>
             </thead>
@@ -2171,7 +2171,7 @@ exports[`Audit Setup > Review & Launch renders full state with jurisdictions wit
       >
         <div>
           <table
-            class="bp3-html-table bp3-html-table-condensed bp3-html-table-striped sc-jKJlTe hDGQko"
+            class="bp3-html-table bp3-html-table-condensed bp3-html-table-striped sc-eNQAEJ gdQBFi"
             style="width: 280px; margin-right: 20px;"
           >
             <thead>
@@ -2208,7 +2208,7 @@ exports[`Audit Setup > Review & Launch renders full state with jurisdictions wit
           style="width: 100%; position: relative; min-height: 140px;"
         >
           <table
-            class="bp3-html-table bp3-html-table-condensed bp3-html-table-striped sc-jKJlTe uqzjr"
+            class="bp3-html-table bp3-html-table-condensed bp3-html-table-striped sc-eNQAEJ cPYOSb"
             style="position: absolute; height: 100%;"
           >
             <thead>
@@ -2218,7 +2218,7 @@ exports[`Audit Setup > Review & Launch renders full state with jurisdictions wit
                   2
                   /
                   3
-                   jurisdictions
+                   jurisdictions
                 </th>
               </tr>
             </thead>
@@ -2279,7 +2279,7 @@ exports[`Audit Setup > Review & Launch renders full state with jurisdictions wit
       >
         <div>
           <table
-            class="bp3-html-table bp3-html-table-condensed bp3-html-table-striped sc-jKJlTe hDGQko"
+            class="bp3-html-table bp3-html-table-condensed bp3-html-table-striped sc-eNQAEJ gdQBFi"
             style="width: 280px; margin-right: 20px;"
           >
             <thead>
@@ -2316,7 +2316,7 @@ exports[`Audit Setup > Review & Launch renders full state with jurisdictions wit
           style="width: 100%; position: relative; min-height: 140px;"
         >
           <table
-            class="bp3-html-table bp3-html-table-condensed bp3-html-table-striped sc-jKJlTe uqzjr"
+            class="bp3-html-table bp3-html-table-condensed bp3-html-table-striped sc-eNQAEJ cPYOSb"
             style="position: absolute; height: 100%;"
           >
             <thead>
@@ -2326,7 +2326,7 @@ exports[`Audit Setup > Review & Launch renders full state with jurisdictions wit
                   2
                   /
                   3
-                   jurisdictions
+                   jurisdictions
                 </th>
               </tr>
             </thead>
@@ -2367,11 +2367,11 @@ exports[`Audit Setup > Review & Launch renders full state with jurisdictions wit
           <div
             class="sc-dnqmqq kGMqKN"
           >
-            <h4
+            <h5
               class="bp3-heading"
             >
               Contest 1
-            </h4>
+            </h5>
             <div>
               <label
                 class="bp3-control bp3-radio"
@@ -2628,7 +2628,7 @@ exports[`Audit Setup > Review & Launch renders full state with offline setting 1
       >
         <div>
           <table
-            class="bp3-html-table bp3-html-table-condensed bp3-html-table-striped sc-jKJlTe hDGQko"
+            class="bp3-html-table bp3-html-table-condensed bp3-html-table-striped sc-eNQAEJ gdQBFi"
             style="width: 280px; margin-right: 20px;"
           >
             <thead>
@@ -2665,7 +2665,7 @@ exports[`Audit Setup > Review & Launch renders full state with offline setting 1
           style="width: 100%; position: relative; min-height: 140px;"
         >
           <table
-            class="bp3-html-table bp3-html-table-condensed bp3-html-table-striped sc-jKJlTe uqzjr"
+            class="bp3-html-table bp3-html-table-condensed bp3-html-table-striped sc-eNQAEJ cPYOSb"
             style="position: absolute; height: 100%;"
           >
             <thead>
@@ -2675,7 +2675,7 @@ exports[`Audit Setup > Review & Launch renders full state with offline setting 1
                   2
                   /
                   3
-                   jurisdictions
+                   jurisdictions
                 </th>
               </tr>
             </thead>
@@ -2716,11 +2716,11 @@ exports[`Audit Setup > Review & Launch renders full state with offline setting 1
           <div
             class="sc-dnqmqq kGMqKN"
           >
-            <h4
+            <h5
               class="bp3-heading"
             >
               Contest Name
-            </h4>
+            </h5>
             <div>
               <label
                 class="bp3-control bp3-radio"

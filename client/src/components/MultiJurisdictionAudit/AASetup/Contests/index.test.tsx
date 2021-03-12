@@ -2,7 +2,12 @@ import React from 'react'
 import { fireEvent, waitFor, render, screen } from '@testing-library/react'
 import { toast } from 'react-toastify'
 import { useParams } from 'react-router-dom'
-import { regexpEscape } from '../../../testUtilities'
+import userEvent from '@testing-library/user-event'
+import {
+  regexpEscape,
+  withMockFetch,
+  renderWithRouter,
+} from '../../../testUtilities'
 import * as utilities from '../../../utilities'
 import Contests from './index'
 import relativeStages from '../_mocks'
@@ -11,6 +16,7 @@ import { numberifyContest, IContestNumbered } from '../../useContests'
 import { IJurisdiction } from '../../useJurisdictions'
 import { IContest } from '../../../../types'
 import { jurisdictionMocks } from '../../useSetupMenuItems/_mocks'
+import { aaApiCalls } from '../../_mocks'
 
 const toastSpy = jest.spyOn(toast, 'error').mockImplementation()
 const apiMock: jest.SpyInstance<
@@ -237,17 +243,17 @@ describe('Audit Setup > Contests', () => {
 
     fireEvent.click(getByText('Save & Next'), { bubbles: true })
     await waitFor(() => {
-      expect(apiMock).toHaveBeenCalledTimes(3)
-      expect(apiMock.mock.calls[2][0]).toBe('/election/1/contest')
-      expect(apiMock.mock.calls[2][1]).toMatchObject({
+      expect(apiMock).toHaveBeenCalledTimes(4)
+      expect(apiMock.mock.calls[3][0]).toBe('/election/1/contest')
+      expect(apiMock.mock.calls[3][1]).toMatchObject({
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
       })
-      if (apiMock.mock.calls[2][1]!.body) {
+      if (apiMock.mock.calls[3][1]!.body) {
         expect(
-          JSON.parse(apiMock.mock.calls[2][1]!.body as string)
+          JSON.parse(apiMock.mock.calls[3][1]!.body as string)
         ).toMatchObject(
           contestMocks.filledTargeted.contests.map(c =>
             regexify(numberifyContest(c))
@@ -481,16 +487,16 @@ describe('Audit Setup > Contests', () => {
     const submit = getAllByText('Save & Next')
     fireEvent.click(submit[submit.length - 1], { bubbles: true })
     await waitFor(() => {
-      expect(apiMock).toHaveBeenCalledTimes(3)
+      expect(apiMock).toHaveBeenCalledTimes(4)
       expect(toastSpy).toHaveBeenCalledTimes(0)
-      if (apiMock.mock.calls[2][1]!.body) {
+      if (apiMock.mock.calls[3][1]!.body) {
         expect(
-          JSON.parse(apiMock.mock.calls[2][1]!.body as string)[1]
+          JSON.parse(apiMock.mock.calls[3][1]!.body as string)[1]
         ).toMatchObject(
           regexify(numberifyContest(contestMocks.filledTargeted.contests[0]))
         )
         expect(
-          JSON.parse(apiMock.mock.calls[2][1]!.body as string)[0]
+          JSON.parse(apiMock.mock.calls[3][1]!.body as string)[0]
         ).toMatchObject(
           regexify(
             numberifyContest(contestMocks.filledOpportunistic.contests[0])
@@ -528,16 +534,16 @@ describe('Audit Setup > Contests', () => {
 
     fireEvent.click(getByText('Save & Next'), { bubbles: true })
     await waitFor(() => {
-      expect(apiMock).toHaveBeenCalledTimes(3)
-      expect(apiMock.mock.calls[2][0]).toBe('/election/1/contest')
-      expect(apiMock.mock.calls[2][1]).toMatchObject({
+      expect(apiMock).toHaveBeenCalledTimes(4)
+      expect(apiMock.mock.calls[3][0]).toBe('/election/1/contest')
+      expect(apiMock.mock.calls[3][1]).toMatchObject({
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
       })
       const submittedBody: IContestNumbered[] = JSON.parse(apiMock.mock
-        .calls[2][1]!.body as string)
+        .calls[3][1]!.body as string)
       expect(submittedBody[0].jurisdictionIds).toMatchObject([
         'jurisdiction-id-2',
       ])

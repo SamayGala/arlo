@@ -1,5 +1,6 @@
 import io
 import json
+import csv
 from flask.testing import FlaskClient
 
 from ...models import *  # pylint: disable=wildcard-import
@@ -7,6 +8,7 @@ from ..helpers import *  # pylint: disable=wildcard-import
 from ...worker.bgcompute import (
     bgcompute_update_standardized_contests_file,
     bgcompute_update_cvr_file,
+    bgcompute_update_ballot_manifest_file,
 )
 from .conftest import TEST_CVRS
 
@@ -36,11 +38,13 @@ def test_set_contest_metadata_on_contest_creation(
     )
     assert_ok(rv)
 
-    # Contest metadata is set on contest creation when all CVRs uploaded
+    # Contest metadata is set on contest creation when all manifests and CVRs uploaded
     contest = Contest.query.get(contest_id)
     snapshot.assert_match(
         dict(
+            # Set from manifest
             total_ballots_cast=contest.total_ballots_cast,
+            # Set from CVRs
             votes_allowed=contest.votes_allowed,
             choices=[
                 dict(name=choice.name, num_votes=choice.num_votes)
@@ -50,11 +54,10 @@ def test_set_contest_metadata_on_contest_creation(
     )
 
 
-def test_set_contest_metadata_on_cvr_upload(
+def test_set_contest_metadata_on_manifest_and_cvr_upload(
     client: FlaskClient,
     election_id: str,
     jurisdiction_ids: List[str],  # pylint: disable=unused-argument
-    manifests,  # pylint: disable=unused-argument
     snapshot,
 ):
     set_logged_in_user(client, UserType.AUDIT_ADMIN, DEFAULT_AA_EMAIL)
@@ -74,7 +77,7 @@ def test_set_contest_metadata_on_cvr_upload(
     )
     assert_ok(rv)
 
-    # Contest metadata isn't set when creating contest if no CVRs
+    # Contest metadata isn't set when creating contest if no manifest/CVRs
     contest = Contest.query.get(contest_id)
     assert contest.total_ballots_cast is None
     assert contest.votes_allowed is None
@@ -84,15 +87,63 @@ def test_set_contest_metadata_on_cvr_upload(
         client, UserType.JURISDICTION_ADMIN, default_ja_email(election_id)
     )
     rv = client.put(
+        f"/api/election/{election_id}/jurisdiction/{jurisdiction_ids[0]}/ballot-manifest",
+        data={
+            "manifest": (
+                io.BytesIO(
+                    b"Tabulator,Batch Name,Number of Ballots\n"
+                    b"TABULATOR1,BATCH1,3\n"
+                    b"TABULATOR1,BATCH2,3\n"
+                    b"TABULATOR2,BATCH1,3\n"
+                    b"TABULATOR2,BATCH2,6"
+                ),
+                "manifest.csv",
+            )
+        },
+    )
+    assert_ok(rv)
+    bgcompute_update_ballot_manifest_file(election_id)
+
+    # Contest total ballots isn't set when only some manifests uploaded
+    contest = Contest.query.get(contest_id)
+    assert contest.total_ballots_cast is None
+    assert contest.votes_allowed is None
+    assert contest.choices == []
+
+    rv = client.put(
+        f"/api/election/{election_id}/jurisdiction/{jurisdiction_ids[1]}/ballot-manifest",
+        data={
+            "manifest": (
+                io.BytesIO(
+                    b"Tabulator,Batch Name,Number of Ballots\n"
+                    b"TABULATOR1,BATCH1,3\n"
+                    b"TABULATOR1,BATCH2,3\n"
+                    b"TABULATOR2,BATCH1,3\n"
+                    b"TABULATOR2,BATCH2,6"
+                ),
+                "manifest.csv",
+            )
+        },
+    )
+    assert_ok(rv)
+    bgcompute_update_ballot_manifest_file(election_id)
+
+    # Contest total ballots is set when all manifests uploaded
+    contest = Contest.query.get(contest_id)
+    assert contest.total_ballots_cast == 30
+    assert contest.votes_allowed is None
+    assert contest.choices == []
+
+    rv = client.put(
         f"/api/election/{election_id}/jurisdiction/{jurisdiction_ids[0]}/cvrs",
         data={"cvrs": (io.BytesIO(TEST_CVRS.encode()), "cvrs.csv",)},
     )
     assert_ok(rv)
     bgcompute_update_cvr_file(election_id)
 
-    # Contest metadata isn't set when only some CVRs uploaded
+    # Contest votes allowed/choices isn't set when only some CVRs uploaded
     contest = Contest.query.get(contest_id)
-    assert contest.total_ballots_cast is None
+    assert contest.total_ballots_cast == 30  # Set from manifest
     assert contest.votes_allowed is None
     assert contest.choices == []
 
@@ -103,11 +154,13 @@ def test_set_contest_metadata_on_cvr_upload(
     assert_ok(rv)
     bgcompute_update_cvr_file(election_id)
 
-    # Contest metadata is set when all CVRs uploaded
+    # Contest votes allowed/choices is set when all CVRs uploaded
     contest = Contest.query.get(contest_id)
     snapshot.assert_match(
         dict(
+            # Set from manifest
             total_ballots_cast=contest.total_ballots_cast,
+            # Set from CVRs
             votes_allowed=contest.votes_allowed,
             choices=[
                 dict(name=choice.name, num_votes=choice.num_votes)
@@ -116,7 +169,23 @@ def test_set_contest_metadata_on_cvr_upload(
         )
     )
 
-    # Contest metadata changes on new CVR upload
+    # Contest metadata changes on new manifest/CVR upload
+    rv = client.put(
+        f"/api/election/{election_id}/jurisdiction/{jurisdiction_ids[0]}/ballot-manifest",
+        data={
+            "manifest": (
+                io.BytesIO(
+                    b"Tabulator,Batch Name,Number of Ballots\n"
+                    b"TABULATOR1,BATCH1,3\n"
+                    b"TABULATOR1,BATCH2,3"
+                ),
+                "manifest.csv",
+            )
+        },
+    )
+    assert_ok(rv)
+    bgcompute_update_ballot_manifest_file(election_id)
+
     new_cvr = "\n".join(TEST_CVRS.splitlines()[:7])
     rv = client.put(
         f"/api/election/{election_id}/jurisdiction/{jurisdiction_ids[0]}/cvrs",
@@ -128,7 +197,9 @@ def test_set_contest_metadata_on_cvr_upload(
     contest = Contest.query.get(contest_id)
     snapshot.assert_match(
         dict(
+            # Set from manifest
             total_ballots_cast=contest.total_ballots_cast,
+            # Set from CVRs
             votes_allowed=contest.votes_allowed,
             choices=[
                 dict(name=choice.name, num_votes=choice.num_votes)
@@ -281,22 +352,32 @@ def test_ballot_comparison_two_rounds(
     # second round. For convenience, using the same format as the CVR to
     # specify our audit results.
     # Tabulator, Batch, Ballot, Choice 1-1, Choice 1-2, Choice 2-1, Choice 2-2, Choice 2-3
+    # We also specify the expected discrepancies.
     audit_results = {
-        ("J1", "TABULATOR1", "BATCH1", 1): "0,1,1,1,0",
-        ("J1", "TABULATOR1", "BATCH2", 2): "0,1,1,1,0",
-        ("J1", "TABULATOR1", "BATCH2", 3): "1,1,0,1,1",  # CVR: 1,0,1,0,1
-        ("J1", "TABULATOR2", "BATCH2", 1): "1,0,1,0,1",
-        ("J1", "TABULATOR2", "BATCH2", 2): "1,1,1,1,1",
-        ("J1", "TABULATOR2", "BATCH2", 3): "blank",  # CVR: 1,0,1,0,1
-        ("J2", "TABULATOR1", "BATCH1", 1): "1,0,1,0,0",  # CVR: 0,1,1,1,0
-        ("J2", "TABULATOR1", "BATCH1", 2): "1,0,1,0,1",
-        ("J2", "TABULATOR1", "BATCH1", 3): "0,1,1,1,0",
-        ("J2", "TABULATOR1", "BATCH2", 1): "1,0,1,0,1",
-        ("J2", "TABULATOR1", "BATCH2", 3): "not found",  # CVR: 1,0,1,0,1
-        ("J2", "TABULATOR2", "BATCH1", 1): "0,1,1,1,0",
-        ("J2", "TABULATOR2", "BATCH2", 1): ",,,,",  # CVR:1,0,1,0,1
-        ("J2", "TABULATOR2", "BATCH2", 2): "1,1,1,1,1",
-        ("J2", "TABULATOR2", "BATCH2", 3): "1,0,1,0,1",
+        ("J1", "TABULATOR1", "BATCH1", 1): ("0,1,1,1,0", (None, None)),
+        ("J1", "TABULATOR1", "BATCH1", 2): ("1,0,1,0,1", (None, None)),
+        ("J1", "TABULATOR1", "BATCH2", 2): ("0,1,1,1,0", (None, None)),
+        ("J1", "TABULATOR1", "BATCH2", 3): ("1,1,0,1,1", (1, 2)),  # CVR: 1,0,1,0,1
+        ("J1", "TABULATOR2", "BATCH1", 2): ("1,0,1,0,1", (None, None)),
+        ("J1", "TABULATOR2", "BATCH2", 1): ("1,0,1,0,1", (None, None)),
+        ("J1", "TABULATOR2", "BATCH2", 2): ("1,1,1,1,1", (None, None)),
+        ("J1", "TABULATOR2", "BATCH2", 3): ("not found", (2, 2)),  # not in CVR
+        ("J1", "TABULATOR2", "BATCH2", 4): ("blank", (None, 1)),  # CVR: ,,1,0,1
+        ("J1", "TABULATOR2", "BATCH2", 5): (",,1,1,0", (None, None)),
+        ("J1", "TABULATOR2", "BATCH2", 6): (",,1,0,1", (None, None)),
+        ("J2", "TABULATOR1", "BATCH1", 1): ("1,0,1,0,0", (0, 0)),  # CVR: 0,1,1,1,0
+        ("J2", "TABULATOR1", "BATCH1", 2): ("1,0,1,0,1", (None, None)),
+        ("J2", "TABULATOR1", "BATCH1", 3): ("0,1,1,1,0", (None, None)),
+        ("J2", "TABULATOR1", "BATCH2", 1): ("not found", (2, 2)),  # CVR: 1,0,1,0,1
+        ("J2", "TABULATOR1", "BATCH2", 3): ("1,0,1,0,1", (None, None)),
+        ("J2", "TABULATOR2", "BATCH1", 1): ("0,1,1,1,0", (None, None)),
+        ("J2", "TABULATOR2", "BATCH1", 2): ("1,0,1,0,1", (None, None)),
+        ("J2", "TABULATOR2", "BATCH2", 1): (",,,,", (1, 1)),  # CVR :1,0,1,0,1
+        ("J2", "TABULATOR2", "BATCH2", 2): ("1,1,1,1,1", (None, None)),
+        ("J2", "TABULATOR2", "BATCH2", 3): ("1,0,1,0,1", (2, 2)),  # not in cvr
+        ("J2", "TABULATOR2", "BATCH2", 4): (",,1,0,1", (None, None)),
+        ("J2", "TABULATOR2", "BATCH2", 5): (",,1,1,0", (None, None)),
+        ("J2", "TABULATOR2", "BATCH2", 6): (",,1,0,1", (None, None)),
     }
 
     def ballot_key(ballot: SampledBallot):
@@ -324,22 +405,10 @@ def test_ballot_comparison_two_rounds(
         )
         sampled_ballot_keys = [ballot_key(ballot) for ballot in sampled_ballots]
 
-        # Ballots that don't have a result recorded for the targeted contest shouldn't be sampled
-        ballots_without_targeted_contest = [
-            ("J1", "TABULATOR2", "BATCH2", 4),
-            ("J1", "TABULATOR2", "BATCH2", 5),
-            ("J1", "TABULATOR2", "BATCH2", 6),
-            ("J2", "TABULATOR2", "BATCH2", 4),
-            ("J2", "TABULATOR2", "BATCH2", 5),
-            ("J2", "TABULATOR2", "BATCH2", 6),
-        ]
-        for bad_ballot_key in ballots_without_targeted_contest:
-            assert bad_ballot_key not in sampled_ballot_keys
-
         assert sorted(sampled_ballot_keys) == sorted(list(audit_results.keys()))
 
         for ballot in sampled_ballots:
-            interpretation_str = audit_results[ballot_key(ballot)]
+            interpretation_str, _ = audit_results[ballot_key(ballot)]
 
             if interpretation_str == "not found":
                 ballot.status = BallotStatus.NOT_FOUND
@@ -400,6 +469,32 @@ def test_ballot_comparison_two_rounds(
     rv = client.get(f"/api/election/{election_id}/report")
     assert_match_report(rv.data, snapshot)
 
+    # Check expected discrepancies against audit report
+    def check_discrepancies(report_data, audit_results):
+        report = report_data.decode("utf-8")
+        report_ballots = list(
+            csv.DictReader(
+                io.StringIO(report.split("######## SAMPLED BALLOTS ########\r\n")[1])
+            )
+        )
+        for ballot, (_, expected_discrepancies) in audit_results.items():
+            jurisdiction, tabulator, batch, position = ballot
+            row = next(
+                row
+                for row in report_ballots
+                if row["Jurisdiction Name"] == jurisdiction
+                and row["Tabulator"] == tabulator
+                and row["Batch Name"] == batch
+                and row["Ballot Position"] == str(position)
+            )
+            parse_discrepancy = lambda d: int(d) if d != "" else None
+            assert expected_discrepancies == (
+                parse_discrepancy(row["Discrepancy: Contest 1"]),
+                parse_discrepancy(row["Discrepancy: Contest 2"]),
+            )
+
+    check_discrepancies(rv.data, audit_results)
+
     # Start a second round
     rv = post_json(client, f"/api/election/{election_id}/round", {"roundNum": 2},)
     assert_ok(rv)
@@ -415,18 +510,17 @@ def test_ballot_comparison_two_rounds(
 
     # For round 2, audit results should match the CVR exactly.
     audit_results = {
-        ("J1", "TABULATOR1", "BATCH1", 2): "1,0,1,0,1",
-        ("J1", "TABULATOR1", "BATCH2", 1): "1,0,1,0,1",
-        ("J1", "TABULATOR2", "BATCH1", 2): "1,0,1,0,1",
-        ("J2", "TABULATOR1", "BATCH2", 2): "0,1,1,1,0",
-        ("J2", "TABULATOR2", "BATCH1", 2): "1,0,1,0,1",
-        ("J2", "TABULATOR2", "BATCH1", 3): "1,0,1,1,0",
+        ("J1", "TABULATOR1", "BATCH2", 1): ("1,0,1,0,1", (None, None)),
+        ("J1", "TABULATOR2", "BATCH1", 1): ("0,1,1,1,0", (None, None)),
+        ("J2", "TABULATOR1", "BATCH2", 2): ("0,1,1,1,0", (None, None)),
+        ("J2", "TABULATOR2", "BATCH1", 3): ("1,0,1,1,0", (None, None)),
     }
 
     audit_all_ballots(round_2_id, audit_results)
 
     rv = client.get(f"/api/election/{election_id}/report")
     assert_match_report(rv.data, snapshot)
+    check_discrepancies(rv.data, audit_results)
 
 
 # This function can be used to generate the correct audit results in case you
@@ -454,6 +548,7 @@ def test_ballot_comparison_two_rounds(
 #         .with_entities(SampledBallot, CvrBallot)
 #         .all()
 #     )
+#
 #     def ballot_key(ballot: SampledBallot):
 #         return (
 #             ballot.batch.jurisdiction.name,
@@ -461,7 +556,13 @@ def test_ballot_comparison_two_rounds(
 #             ballot.batch.name,
 #             ballot.ballot_position,
 #         )
-#     print({ballot_key(ballot): cvr.interpretations for ballot, cvr in ballots_and_cvrs})
+#
+#     print(
+#         {
+#             ballot_key(ballot): (cvr.interpretations, (None, None))
+#             for ballot, cvr in ballots_and_cvrs
+#         }
+#     )
 
 
 def test_ballot_comparison_cvr_metadata(
@@ -535,12 +636,19 @@ def test_ballot_comparison_cvr_metadata(
     )
     retrieval_list = rv.data.decode("utf-8").replace("\r\n", "\n")
     snapshot.assert_match(retrieval_list)
+
+    # Check that the CVR metadata is included with each ballot for JAs/audit boards
     rv = client.get(
         f"/api/election/{election_id}/jurisdiction/{jurisdiction_ids[0]}/round/{round_1_id}/ballots"
     )
-    assert len(json.loads(rv.data)["ballots"]) == len(retrieval_list.splitlines()) - 1
+    ballots = json.loads(rv.data)["ballots"]
+    assert len(ballots) == len(retrieval_list.splitlines()) - 1
 
-    # Check that the CVR metadata is included with each ballot for audit boards
+    assert ballots[0]["batch"]["name"] == "BATCH1"
+    assert ballots[0]["batch"]["tabulator"] == "TABULATOR1"
+    assert ballots[0]["position"] == 1
+    assert ballots[0]["imprintedId"] == "1-1-1"
+
     rv = client.get(
         f"/api/election/{election_id}/jurisdiction/{jurisdiction_ids[0]}/round/{round_1_id}/audit-board"
     )
@@ -556,10 +664,6 @@ def test_ballot_comparison_cvr_metadata(
     assert ballots[0]["batch"]["tabulator"] == "TABULATOR1"
     assert ballots[0]["position"] == 1
     assert ballots[0]["imprintedId"] == "1-1-1"
-    assert ballots[0]["contestsOnBallot"] == [contests[0]["id"], contests[1]["id"]]
-
-    ballot_missing_contest = next(b for b in ballots if b["imprintedId"] == "2-2-4")
-    assert ballot_missing_contest["contestsOnBallot"] == [contests[0]["id"]]
 
 
 def test_ballot_comparison_sample_size_validation(
