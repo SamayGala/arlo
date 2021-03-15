@@ -129,6 +129,7 @@ describe('AA setup flow', () => {
       await waitFor(() => {
         expect(queryAllByText('Participants').length).toBe(2)
       })
+      expect(container).toMatchSnapshot()
     })
   })
 
