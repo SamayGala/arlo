@@ -153,15 +153,24 @@ export const JAFileDownloadButtons = ({
       onClick={
         /* istanbul ignore next */ // tested in generateSheets.test.tsx
         () =>
-          apiDownload(
-            `/election/${electionId}/jurisdiction/${jurisdictionId}/round/${
-              round.id
-            }/${
-              auditSettings.auditType === 'BATCH_COMPARISON'
-                ? 'batches'
-                : 'ballots'
-            }/retrieval-list`
-          )
+          new Promise((resolve, reject) => {
+            apiDownload(
+              `/election/${electionId}/jurisdiction/${jurisdictionId}/round/${
+                round.id
+              }/${
+                auditSettings.auditType === 'BATCH_COMPARISON'
+                  ? 'batches'
+                  : 'ballots'
+              }/retrieval-list`
+            )
+              .then(() => {
+                resolve('done')
+              })
+              .catch(err => {
+                console.log(err)
+                reject(err)
+              })
+          })
       }
     >
       Download Aggregated{' '}
