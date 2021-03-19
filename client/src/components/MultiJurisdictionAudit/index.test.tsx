@@ -578,6 +578,53 @@ describe('JA setup', () => {
       )
     })
   })
+
+  it('should display candidate totals by batch & not CVR section for batch comparison', async () => {
+    const expectedCalls = [
+      jaApiCalls.getUser,
+      jaApiCalls.getSettings(auditSettings.batchComparisonAll),
+      jaApiCalls.getRounds,
+      jaApiCalls.getBallotManifestFile(manifestMocks.empty),
+      jaApiCalls.getBatchTalliesFile(talliesMocks.empty),
+      jaApiCalls.getCVRSfile(cvrsMocks.empty),
+    ]
+    await withMockFetch(expectedCalls, async () => {
+      const { container } = renderView()
+      await screen.findByText('Audit Source Data')
+
+      await screen.findByText('Candidate Totals by Batch')
+
+      await waitFor(() =>
+        expect(screen.queryByText('Cast Vote Records')).not.toBeInTheDocument()
+      )
+      expect(container).toMatchSnapshot()
+    })
+  })
+
+  it('should display CVR section & not candidate totals by batch for ballot comparison', async () => {
+    const expectedCalls = [
+      jaApiCalls.getUser,
+      jaApiCalls.getSettings(auditSettings.ballotComparisonAll),
+      jaApiCalls.getRounds,
+      jaApiCalls.getBallotManifestFile(manifestMocks.processed),
+      jaApiCalls.getBatchTalliesFile(talliesMocks.empty),
+      jaApiCalls.getCVRSfile(cvrsMocks.empty),
+    ]
+    await withMockFetch(expectedCalls, async () => {
+      const { container } = renderView()
+      await screen.findByText('Audit Source Data')
+
+      await waitFor(() =>
+        expect(
+          screen.queryByText('Candidate Totals by Batch')
+        ).not.toBeInTheDocument()
+      )
+
+      await screen.findByText('Cast Vote Records')
+
+      expect(container).toMatchSnapshot()
+    })
+  })
 })
 
 describe('prettifyRefreshStatus', () => {
