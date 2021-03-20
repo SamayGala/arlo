@@ -273,16 +273,20 @@ describe('StatusBox', () => {
           />
         </Router>
       )
-      fireEvent.click(
-        screen.getByRole('button', { name: 'Download Audit Report' }),
-        {
-          bubbles: true,
-        }
+      const downloadReportButton = screen.getByRole('button', {
+        name: 'Download Audit Report',
+      })
+      fireEvent.click(downloadReportButton, {
+        bubbles: true,
+      })
+      await expect(downloadReportButton.classList.contains('bp3-loading')).toBe(
+        true
       )
       await waitFor(() => {
         expect(window.open).toHaveBeenCalledTimes(1)
         expect(window.open).toBeCalledWith(`/api/election/1/report`)
       })
+      expect(downloadReportButton.classList.contains('bp3-loading')).toBe(false)
     })
   })
 
@@ -444,11 +448,14 @@ describe('StatusBox', () => {
           />
         </Router>
       )
-      fireEvent.click(
-        screen.getByRole('button', { name: 'Download Audit Report' }),
-        {
-          bubbles: true,
-        }
+      const downloadReportButton = screen.getByRole('button', {
+        name: 'Download Audit Report',
+      })
+      fireEvent.click(downloadReportButton, {
+        bubbles: true,
+      })
+      await expect(downloadReportButton.classList.contains('bp3-loading')).toBe(
+        true
       )
       await waitFor(() => {
         expect(window.open).toHaveBeenCalledTimes(1)
@@ -456,6 +463,9 @@ describe('StatusBox', () => {
           '/api/election/1/jurisdiction/1/report'
         )
       })
+      await expect(downloadReportButton.classList.contains('bp3-loading')).toBe(
+        false
+      )
     })
 
     cvrAuditTypes.forEach(auditType => {
