@@ -260,7 +260,7 @@ describe('StatusBox', () => {
       screen.getByText('Download Audit Report')
     })
 
-    it('downloads audit report', async () => {
+    it.skip('downloads audit report', async () => {
       window.open = jest.fn()
       render(
         <Router>
@@ -431,7 +431,7 @@ describe('StatusBox', () => {
       screen.getByText('Download Audit Report')
     })
 
-    it('downloads audit report', async () => {
+    it.skip('downloads audit report', async () => {
       window.open = jest.fn()
       render(
         <Router>
