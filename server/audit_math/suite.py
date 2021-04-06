@@ -10,7 +10,7 @@ https://github.com/pbstark/CORLA18
 """
 from itertools import product
 import math
-from typing import Tuple, Dict, TypedDict, NamedTuple
+from typing import Tuple, Dict, TypedDict, NamedTuple, List
 from collections import Counter
 
 from decimal import Decimal
@@ -101,15 +101,13 @@ class BallotPollingStratum:
             pvalue: the pvalue from testing the hypothesis that null margin is not the acual margin
         """
 
-        n = self.sample_size
-
-        if n == 0:
-            return 1
+        if self.sample_size == 0 or reported_margin == 0:
+            return 1.0
 
         sample = bravo.compute_cumulative_sample(self.sample)
         n_w = sample[winner]
         n_l = sample[loser]
-        n_u = n - n_w - n_l
+        n_u = self.sample_size - n_w - n_l
 
         v_w = self.vote_totals[winner]
         v_l = self.vote_totals[loser]
@@ -118,7 +116,7 @@ class BallotPollingStratum:
         null_margin = (v_w - v_l) - null_lambda * reported_margin
 
         if not (v_w >= n_w and v_l >= n_l and v_u >= n_u):
-            raise ValueError("Alternative hypothesis isn't consistent with the sample")
+            return 1.0
 
         alt_logLR = (
             np.sum(np.log(v_w - np.arange(n_w)))
@@ -133,16 +131,13 @@ class BallotPollingStratum:
             * np.sum(np.log(self.num_ballots - 2 * Nw + null_margin - np.arange(n_u)))
         )
 
-        upper_n_w_limit = int((self.num_ballots - n_u + null_margin) / 2)
+        upper_n_w_limit = (self.num_ballots - n_u + null_margin) / 2.0
         lower_n_w_limit = np.max([n_w, n_l + null_margin])
 
         # For extremely small or large null_margins, the limits do not
         # make sense with the sample values.
         if upper_n_w_limit < n_w or (upper_n_w_limit - null_margin) < n_l:
-            raise ValueError("Null is impossible, given the sample")
-
-        if lower_n_w_limit > upper_n_w_limit:
-            lower_n_w_limit, upper_n_w_limit = upper_n_w_limit, lower_n_w_limit
+            return 0
 
         LR_derivative = (
             lambda Nw: np.sum([1 / (Nw - i) for i in range(n_w)])
@@ -152,13 +147,6 @@ class BallotPollingStratum:
                 [1 / (self.num_ballots - 2 * Nw + null_margin - i) for i in range(n_u)]
             )
         )
-
-        # Sometimes the upper_n_w_limit is too extreme, causing illegal 0s.
-        # Check and change the limit when that occurs.
-        if np.isinf(null_logLR(upper_n_w_limit)) or np.isinf(
-            LR_derivative(upper_n_w_limit)
-        ):
-            upper_n_w_limit -= 1
 
         # Check if the maximum occurs at an endpoint: deriv has no sign change
         if LR_derivative(upper_n_w_limit) * LR_derivative(lower_n_w_limit) > 0:
@@ -175,9 +163,8 @@ class BallotPollingStratum:
         logLR = alt_logLR - null_logLR(nuisance_param)
         LR = float(np.exp(logLR))  # This value is always a float, but np.exp
         # can return a vector. casting for the typechecker.
-        # TODO: investigate what happens when this overflows.
-
-        return 1.0 / LR if 1.0 / LR < 1 else 1.0
+        # Note if this value overflows, the p-value becomes 0.
+        return min(1.0 / LR, 1.0)
 
 
 class MisstatementCounts(TypedDict):
@@ -247,8 +234,11 @@ class BallotComparisonStratum:
             pvalue - the pvalue for the hypothesis given the null_lambda
         """
 
-        if self.sample_size == 0:
-            return 1
+        if self.sample_size == 0 or reported_margin == 0:
+            return 1.0
+
+        if self.sample_size == self.num_ballots:
+            return 0.0
 
         o1, o2, u1, u2 = (
             self.misstatements[(winner, loser)]["o1"],
@@ -263,7 +253,7 @@ class BallotComparisonStratum:
 
         # This represents an invalid alternative, because lambda is too big.
         if multiplier <= 0:
-            raise ValueError("Alternative hypothesis is invalid!")
+            return 1.0
 
         log_pvalue = (
             self.sample_size * multiplier.ln()
@@ -283,6 +273,7 @@ def maximize_fisher_combined_pvalue(
     cvr_stratum: BallotComparisonStratum,
     winner: str,
     loser: str,
+    stepsize: float = 0.05,
 ) -> float:
     """
     Grid search to find the maximum P-value.
@@ -302,8 +293,6 @@ def maximize_fisher_combined_pvalue(
         a maximum p-value for the Fisher's combining function given the two
         strata.
     """
-    stepsize = 0.05
-
     maximized_pvalue = 0.0
     # find range of possible lambda
     cvr_winner_votes = cvr_stratum.vote_totals[winner]
@@ -313,6 +302,12 @@ def maximize_fisher_combined_pvalue(
     bp_loser_votes = bp_stratum.vote_totals[loser]
 
     V = cvr_winner_votes - cvr_loser_votes + bp_winner_votes - bp_loser_votes
+    reported_margin = contest.candidates[winner] - contest.candidates[loser]
+    assert V == reported_margin
+
+    # The election is tied
+    if V == 0:
+        return 1.0
 
     lambda_lower = (
         np.amax(
@@ -324,7 +319,7 @@ def maximize_fisher_combined_pvalue(
         / V
     )
     lambda_upper = (
-        np.amax(
+        np.amin(
             [
                 cvr_winner_votes - cvr_loser_votes + cvr_stratum.num_ballots,
                 V - (bp_winner_votes - bp_loser_votes - bp_stratum.num_ballots),
@@ -337,19 +332,17 @@ def maximize_fisher_combined_pvalue(
     bp_sample_winner_votes = sample[winner]
     bp_sample_loser_votes = sample[loser]
 
-    reported_margin = contest.candidates[winner] - contest.candidates[loser]
-
     Wn = bp_sample_winner_votes
     Ln = bp_sample_loser_votes
     Un = bp_stratum.sample_size - bp_sample_winner_votes - bp_sample_loser_votes
-    assert Wn >= 0
-    assert Ln >= 0
-    assert Un >= 0
+    assert Wn >= 0, f"{Wn, Ln, Un}"
+    assert Ln >= 0, f"{Wn, Ln, Un}"
+    assert Un >= 0, f"{Wn, Ln, Un}"
 
     T2 = (
         lambda delta: 2
-        * bp_stratum.sample_size
-        * np.log(1 + reported_margin * delta / (2 * bp_stratum.num_ballots * GAMMA))
+        * cvr_stratum.sample_size
+        * np.log(1 + reported_margin * delta / (2 * cvr_stratum.num_ballots * GAMMA))
     )
     modulus = (
         lambda delta: 2 * Wn * np.log(1 + reported_margin * delta)
@@ -366,34 +359,22 @@ def maximize_fisher_combined_pvalue(
 
         fisher_pvalues = np.empty_like(test_lambdas)
         for i, test_lambda in enumerate(test_lambdas):
-            try:
-                pvalue1 = np.min(
-                    [
-                        1,
-                        cvr_stratum.compute_pvalue(
-                            reported_margin, winner, loser, test_lambda
-                        ),
-                    ]
-                )
-            except ValueError:
-                pvalue1 = 0
-
-            try:
-                pvalue2 = np.min(
-                    [
-                        1,
-                        bp_stratum.compute_pvalue(
-                            reported_margin, winner, loser, 1 - test_lambda
-                        ),
-                    ]
-                )
-            except ValueError as e:
-                # If the sprt throws an error, set its pvalue to 0.
-                # This is per the Stark code
-                if "Alternative" in str(e):
-                    pvalue2 = 1.0
-                else:
-                    pvalue2 = 0
+            pvalue1 = np.min(
+                [
+                    1,
+                    cvr_stratum.compute_pvalue(
+                        reported_margin, winner, loser, test_lambda
+                    ),
+                ]
+            )
+            pvalue2 = np.min(
+                [
+                    1,
+                    bp_stratum.compute_pvalue(
+                        reported_margin, winner, loser, 1 - test_lambda
+                    ),
+                ]
+            )
 
             pvalues = [pvalue1, pvalue2]
             if np.any(np.array(pvalues) == 0):
@@ -457,7 +438,6 @@ def try_n(
         A Fisher's combined maximized p-value for the given sample size, contest,
         winner-loser pair, and strata.
     """
-
     n1_original = cvr_stratum.sample_size
     n2_original = bp_stratum.sample_size
 
@@ -473,7 +453,7 @@ def try_n(
     n2 = int(n - n1)
 
     if (n1 < n1_original) or (n2 < n2_original):
-        return 1
+        return 1.0
 
     o1 = (
         math.ceil(o1_rate * (n - n1_original))
@@ -494,7 +474,7 @@ def try_n(
 
     # Because this is a hypothetical sample, we create a
     # corresponding hypothetical stratum
-    hyp_sample_size = n1_original + n1
+    hyp_sample_size = n1
 
     hyp_misstatements: MISSTATEMENTS = {
         (winner, loser): {"o1": o1, "o2": o2, "u1": u1, "u2": u2,}
@@ -510,9 +490,9 @@ def try_n(
     # Set up the no-CVR stratum, assuming the sample looks like the
     # prior round
     prev_sample_size = bp_stratum.sample_size
-    hyp_sample = bp_stratum.sample
+    hyp_sample: BallotPollingStratum.SAMPLE_RESULTS = {"hyp_round": {}}
 
-    cumulative_sample = bravo.compute_cumulative_sample(hyp_sample)
+    cumulative_sample = bravo.compute_cumulative_sample(bp_stratum.sample)
 
     # Add fake ballots to the hypothetical sample:
     if prev_sample_size == 0:
@@ -534,23 +514,26 @@ def try_n(
         # Otherwise use the sample we've seen so far
         hyp_sample["hyp_round"] = {
             winner: min(
-                math.ceil(
-                    ((n2 - hyp_sample_size) * cumulative_sample[winner])
-                    / hyp_sample_size
+                int(
+                    (n2 - prev_sample_size)
+                    * (cumulative_sample[winner] / prev_sample_size)
                 ),
                 bp_stratum.vote_totals[winner],
             ),
             loser: min(
                 math.ceil(
-                    ((n2 - prev_sample_size) * cumulative_sample[loser])
-                    / hyp_sample_size
+                    (n2 - prev_sample_size)
+                    * (cumulative_sample[loser] / prev_sample_size)
                 ),
                 bp_stratum.vote_totals[loser],
             ),
         }
 
-    hyp_sample_size = prev_sample_size + n2
+    hyp_sample_size = n2
     hyp_sample_size = min(bp_stratum.num_ballots, hyp_sample_size)
+
+    for rnd in bp_stratum.sample:
+        hyp_sample[rnd] = bp_stratum.sample[rnd]
 
     hyp_no_cvr_stratum = BallotPollingStratum(
         bp_stratum.num_ballots, bp_stratum.vote_totals, hyp_sample, hyp_sample_size
@@ -559,6 +542,70 @@ def try_n(
     return maximize_fisher_combined_pvalue(
         alpha, contest, hyp_no_cvr_stratum, hyp_cvr_stratum, winner, loser
     )
+
+
+def get_sample_size_for_wl_pair(
+    alpha: float,
+    contest: Contest,
+    bp_stratum: BallotPollingStratum,
+    cvr_stratum: BallotComparisonStratum,
+    winner: str,
+    loser: str,
+) -> Tuple[int, int]:
+    n_ratio = cvr_stratum.num_ballots / (
+        cvr_stratum.num_ballots + bp_stratum.num_ballots
+    )
+    ballots_to_sample = max(
+        MIN_SAMPLE_SIZE, cvr_stratum.sample_size + bp_stratum.sample_size
+    )
+
+    expected_pvalue = 1.0
+
+    # this allows us to exactly match CORLA18's estimate_n and estimate_escalation_n
+    coefficient = 1.1
+    if bp_stratum.sample_size == 0 and cvr_stratum.sample_size == 0:
+        coefficient = 2.0
+
+    # step 1: linear search, increasing n by a factor of 1.1 or 2 each time
+    while expected_pvalue > alpha:
+        ballots_to_sample = int(coefficient * ballots_to_sample)
+        if ballots_to_sample > contest.ballots:
+            cvr_ballots_to_sample = math.ceil(n_ratio * contest.ballots)
+            bp_ballots_to_sample = int(contest.ballots - cvr_ballots_to_sample)
+            return (cvr_ballots_to_sample, bp_ballots_to_sample)
+
+        expected_pvalue = try_n(
+            ballots_to_sample,
+            alpha,
+            contest,
+            winner,
+            loser,
+            bp_stratum,
+            cvr_stratum,
+            n_ratio,
+        )
+
+    # step 2: bisection between n/1.1 and n
+    low_n = ballots_to_sample / coefficient
+    high_n = ballots_to_sample
+    mid_pvalue = 1.0
+    # TODO: do we need this tolerance?
+    risk_limit_tol = 0.8
+    while (mid_pvalue > alpha) or (mid_pvalue < risk_limit_tol * alpha):
+        mid_n = int(np.floor((low_n + high_n) / 2))  # cast for typechecker
+        if mid_n in [low_n, high_n]:
+            break
+        mid_pvalue = try_n(
+            mid_n, alpha, contest, winner, loser, bp_stratum, cvr_stratum, n_ratio,
+        )
+        if mid_pvalue <= alpha:
+            high_n = mid_n
+        else:
+            low_n = mid_n
+
+    cvr_ballots_to_sample = int(math.ceil(n_ratio * high_n))
+    bp_ballots_to_sample = int(math.ceil(high_n - cvr_ballots_to_sample))
+    return (cvr_ballots_to_sample, bp_ballots_to_sample)
 
 
 def get_sample_size(
@@ -581,85 +628,37 @@ def get_sample_size(
 
     alpha = float(risk_limit) / 100
 
-    for winner, loser in product(contest.winners, contest.losers):
-        winner_votes_in_bp = bp_stratum.vote_totals[winner]
-        loser_votes_in_bp = bp_stratum.vote_totals[loser]
+    # Note: because we are seeking to maximize the p-values in both strata,
+    # the p-values are monotonic, and assessing the hypothesis that the error
+    # in both strata is greater than or equal to some threshold value that
+    # depends on the margin, in votes, selecting the smallest margin maximizes
+    # the p-values for the first round.
 
-        n_ratio = cvr_stratum.num_ballots / (
-            cvr_stratum.num_ballots + bp_stratum.num_ballots
+    if bp_stratum.sample_size == 0 and cvr_stratum.sample_size == 0:
+        worst_winner = min(  # type: ignore
+            {winner: contest.candidates[winner] for winner in contest.winners},
+            key=contest.candidates.get,
         )
-        num_sampled = max(
-            MIN_SAMPLE_SIZE, cvr_stratum.sample_size + bp_stratum.sample_size
+        best_loser = max(  # type: ignore
+            {loser: contest.candidates[loser] for loser in contest.losers},
+            key=contest.candidates.get,
         )
 
-        ballots_to_sample = num_sampled
-
-        expected_pvalue = 1.0
-
-        # this allows us to exactly match CORLA18's estimate_n and estimate_escalation_n
-        coefficient = 1.1
-        if bp_stratum.sample_size == 0 and cvr_stratum.sample_size == 0:
-            coefficient = 2.0
-
-        # step 1: linear search, increasing n by a factor of 1.1 each time
-        while (expected_pvalue > alpha) or (expected_pvalue is np.nan):
-            # TODO: figure out if we should use 2 or 1.1
-            ballots_to_sample = int(coefficient * ballots_to_sample)
-            if ballots_to_sample > contest.ballots:
-                cvr_ballots_to_sample = math.ceil(n_ratio * contest.ballots)
-                bp_ballots_to_sample = int(contest.ballots - cvr_ballots_to_sample)
-                return HybridPair(
-                    cvr=cvr_ballots_to_sample, non_cvr=bp_ballots_to_sample
+        sample_size = get_sample_size_for_wl_pair(
+            alpha, contest, bp_stratum, cvr_stratum, worst_winner, best_loser
+        )
+    else:
+        sample_sizes: List[Tuple[int, int]] = []
+        for winner, loser in product(contest.winners, contest.losers):
+            sample_sizes.append(
+                get_sample_size_for_wl_pair(
+                    alpha, contest, bp_stratum, cvr_stratum, winner, loser
                 )
-            if bp_stratum.num_ballots > 0:
-                cvr_ballots_to_sample = math.ceil(n_ratio * ballots_to_sample)
-                bp_ballots_to_sample = int(ballots_to_sample - cvr_ballots_to_sample)
-                if winner_votes_in_bp < int(
-                    bp_ballots_to_sample * winner_votes_in_bp / bp_stratum.num_ballots
-                ) or loser_votes_in_bp < int(
-                    bp_ballots_to_sample * loser_votes_in_bp / bp_stratum.num_ballots
-                ):
-                    return HybridPair(
-                        cvr=cvr_stratum.num_ballots, non_cvr=bp_stratum.num_ballots
-                    )
-            expected_pvalue = try_n(
-                ballots_to_sample,
-                alpha,
-                contest,
-                winner,
-                loser,
-                bp_stratum,
-                cvr_stratum,
-                n_ratio,
             )
 
-        # step 2: bisection between n/1.1 and n
-        low_n = ballots_to_sample / coefficient
-        high_n = ballots_to_sample
-        mid_pvalue = 1.0
-        # TODO: do we need this tolerance?
-        risk_limit_tol = 0.8
-        # while (mid_pvalue > alpha) or (expected_pvalue is np.nan):
-        while (
-            (mid_pvalue > alpha)
-            or (mid_pvalue < risk_limit_tol * alpha)
-            or (expected_pvalue is np.nan)
-        ):
-            mid_n = int(np.floor((low_n + high_n) / 2))  # cast for typechecker
-            if mid_n in [low_n, high_n]:
-                break
-            mid_pvalue = try_n(
-                mid_n, alpha, contest, winner, loser, bp_stratum, cvr_stratum, n_ratio,
-            )
-            if mid_pvalue <= alpha:
-                high_n = mid_n
-            else:
-                low_n = mid_n
+        sample_size = sorted(sample_sizes, key=sum, reverse=True)[0]
 
-        cvr_ballots_to_sample = math.ceil(n_ratio * high_n)
-        bp_ballots_to_sample = math.ceil(high_n - cvr_ballots_to_sample)
-
-    return HybridPair(cvr=cvr_ballots_to_sample, non_cvr=bp_ballots_to_sample)
+    return HybridPair(cvr=sample_size[0], non_cvr=sample_size[1])
 
 
 def compute_risk(
@@ -682,19 +681,41 @@ def compute_risk(
         whether the p-value meets the risk limit.
 
     """
-    #    alpha = Decimal(risk_limit) / 100
     alpha = float(risk_limit) / 100
     assert alpha < 1
 
     pvalues = []
+
+    exception = False
     for winner, loser in product(contest.winners, contest.losers):
-        pvalues.append(
-            maximize_fisher_combined_pvalue(
-                alpha, contest, bp_stratum, cvr_stratum, winner, loser
+        if (
+            bp_stratum.sample_size >= bp_stratum.num_ballots
+            and cvr_stratum.sample_size >= cvr_stratum.num_ballots
+        ):
+            # We did a full recount already!
+            exception = True
+            pvalues.append(0.0)
+        elif bp_stratum.sample_size >= bp_stratum.num_ballots:
+            exception = True
+            pvalues.append(cvr_stratum.compute_pvalue(alpha, winner, loser, 1))
+        elif cvr_stratum.sample_size >= cvr_stratum.num_ballots:
+            exception = True
+            pvalues.append(bp_stratum.compute_pvalue(alpha, winner, loser, 1))
+        else:
+            pvalues.append(
+                maximize_fisher_combined_pvalue(
+                    alpha, contest, bp_stratum, cvr_stratum, winner, loser
+                )
             )
-        )
 
     max_p = max(pvalues)
+
+    if exception:
+        raise ValueError(
+            "One or both strata has already been recounted. Possibly returning a p-value from the remaining stratum.",
+            max_p,
+            max_p <= alpha,
+        )
 
     return max_p, max_p <= alpha
 
@@ -714,6 +735,7 @@ def misstatements(
             )
             for ballot, audited_result in audited_results.items()
         ]
+
         discrepancy_nums = [
             discrepancy["counted_as"]
             for discrepancy in discrepancies

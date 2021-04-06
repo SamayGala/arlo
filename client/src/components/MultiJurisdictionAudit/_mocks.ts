@@ -6,7 +6,6 @@ import { IBallot } from './RoundManagement/useBallots'
 import { IAuditBoard } from './useAuditBoards'
 import { IRound } from './useRoundsAuditAdmin'
 import { IAuditSettings } from './useAuditSettings'
-import { IContest } from '../../types'
 import jurisdictionFile, {
   jurisdictionErrorFile,
   standardizedContestsFile,
@@ -251,6 +250,11 @@ export const aaApiCalls = {
     },
     response: { electionId: '1' },
   }),
+  deleteAudit: {
+    url: '/api/election/1',
+    options: { method: 'DELETE' },
+    response: { status: 'ok' },
+  },
   getRounds: (rounds: IRound[]) => ({
     url: '/api/election/1/round',
     response: { rounds },

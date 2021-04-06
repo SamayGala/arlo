@@ -49,7 +49,7 @@ export const apiDownload = (endpoint: string) =>
     try {
       const windowObj = window.open(`/api${endpoint}`)
       if (windowObj != null) {
-        windowObj.onbeforeunload = function() {
+        windowObj.onbeforeunload = () => {
           resolve('done')
         }
       }

@@ -55,6 +55,7 @@ const StatusBox: React.FC<IStatusBoxProps> = ({
                 <Button
                   intent="success"
                   loading={isSubmitting}
+                  disabled={isSubmitting}
                   type="submit"
                   onClick={handleSubmit as React.FormEventHandler}
                 >
