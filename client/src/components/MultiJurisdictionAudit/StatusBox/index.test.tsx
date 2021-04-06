@@ -260,7 +260,7 @@ describe('StatusBox', () => {
       screen.getByText('Download Audit Report')
     })
 
-    it.skip('downloads audit report', async () => {
+    it('downloads audit report', async () => {
       window.open = jest.fn()
       render(
         <Router>
@@ -286,7 +286,6 @@ describe('StatusBox', () => {
         expect(window.open).toHaveBeenCalledTimes(1)
         expect(window.open).toBeCalledWith(`/api/election/1/report`)
       })
-      expect(downloadReportButton.classList.contains('bp3-loading')).toBe(false)
     })
   })
 
@@ -431,7 +430,7 @@ describe('StatusBox', () => {
       screen.getByText('Download Audit Report')
     })
 
-    it.skip('downloads audit report', async () => {
+    it('downloads audit report', async () => {
       window.open = jest.fn()
       render(
         <Router>
@@ -463,9 +462,6 @@ describe('StatusBox', () => {
           '/api/election/1/jurisdiction/1/report'
         )
       })
-      await expect(downloadReportButton.classList.contains('bp3-loading')).toBe(
-        false
-      )
     })
 
     cvrAuditTypes.forEach(auditType => {
