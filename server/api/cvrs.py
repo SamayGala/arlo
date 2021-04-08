@@ -176,9 +176,6 @@ def process_cvr_file(session: Session, jurisdiction: Jurisdiction, file: File):
         # the db using the COPY command (muuuuch faster than INSERT).
         with tempfile.TemporaryFile(mode="w+") as ballots_tempfile:
             ballots_csv = csv.writer(ballots_tempfile)
-            ballots_csv.writerow(
-                ["batch_id", "ballot_position", "imprinted_id", "interpretations"]
-            )
 
             for row in cvrs:
                 [
@@ -285,12 +282,16 @@ def process_cvr_file(session: Session, jurisdiction: Jurisdiction, file: File):
                 ballots_tempfile.seek(0)
                 cursor.copy_expert(
                     """
-                        COPY cvr_ballot
+                        COPY cvr_ballot (
+                            batch_id,
+                            record_id,
+                            imprinted_id,
+                            interpretations
+                        )
                         FROM STDIN
                         WITH (
                             FORMAT CSV,
-                            DELIMITER ',',
-                            HEADER
+                            DELIMITER ','
                         )
                         """,
                     ballots_tempfile,
@@ -303,6 +304,32 @@ def process_cvr_file(session: Session, jurisdiction: Jurisdiction, file: File):
                 raise exc
             finally:
                 connection.close()
+
+        # Assign ballot_position for each CvrBallot by counting each ballot's
+        # index within the batch in the CVR, ordering by record_id within the
+        # batch
+        ballot_position = (
+            CvrBallot.query.join(Batch)
+            .filter_by(jurisdiction_id=jurisdiction.id)
+            .with_entities(
+                CvrBallot.batch_id,
+                CvrBallot.record_id,
+                func.row_number()
+                .over(partition_by=CvrBallot.batch_id, order_by=CvrBallot.record_id)
+                .label("ballot_position"),
+            )
+            .subquery()
+        )
+        db_session.execute(
+            CvrBallot.__table__.update()  # pylint: disable=no-member
+            .values(ballot_position=ballot_position.c.ballot_position)
+            .where(
+                and_(
+                    CvrBallot.batch_id == ballot_position.c.batch_id,
+                    CvrBallot.record_id == ballot_position.c.record_id,
+                )
+            )
+        )
 
         if jurisdiction.election.audit_type == AuditType.BALLOT_COMPARISON:
             for contest in jurisdiction.election.contests:
