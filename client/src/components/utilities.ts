@@ -54,7 +54,7 @@ export const apiDownload = (endpoint: string) =>
         }
       }
     } catch (err) {
-      reject(err)
+      console.log(err)
     }
   })
 

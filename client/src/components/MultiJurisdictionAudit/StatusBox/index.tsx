@@ -72,13 +72,9 @@ const StatusBox: React.FC<IStatusBoxProps> = ({
 
 const downloadAuditAdminReport = (electionId: string) =>
   new Promise((resolve, reject) => {
-    apiDownload(`/election/${electionId}/report`)
-      .then(() => {
-        resolve('done')
-      })
-      .catch(err => {
-        reject(err)
-      })
+    apiDownload(`/election/${electionId}/report`).then(() => {
+      resolve('done')
+    })
   })
 
 const downloadJurisdictionAdminReport = (
@@ -86,13 +82,11 @@ const downloadJurisdictionAdminReport = (
   jurisdictionId: string
 ) =>
   new Promise((resolve, reject) => {
-    apiDownload(`/election/${electionId}/jurisdiction/${jurisdictionId}/report`)
-      .then(() => {
-        resolve('done')
-      })
-      .catch(err => {
-        reject(err)
-      })
+    apiDownload(
+      `/election/${electionId}/jurisdiction/${jurisdictionId}/report`
+    ).then(() => {
+      resolve('done')
+    })
   })
 
 export const allCvrsUploaded = (jurisdictions: IJurisdiction[]): boolean =>
@@ -231,10 +225,7 @@ export const AuditAdminStatusBox: React.FC<IAuditAdminProps> = ({
       details={[]}
       buttonLabel="Download Audit Report"
       onButtonClick={async () => {
-        await downloadAuditAdminReport(electionId).catch(err => {
-          // eslint-disable-next-line no-console
-          console.error(err)
-        })
+        await downloadAuditAdminReport(electionId)
       }}
     >
       {children}
