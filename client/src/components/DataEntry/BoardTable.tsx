@@ -38,7 +38,6 @@ const RightSection = styled.div`
   @media (max-width: 768px) {
     display: flex;
     margin-top: 10px;
-
     .bp3-button:first-child {
       margin-left: 0;
     }
@@ -108,6 +107,10 @@ const BoardTable: React.FC<IProps> = ({ boardName, ballots, url }: IProps) => {
     b => b.status === BallotStatus.NOT_AUDITED
   )
 
+  const getTotalAudited = ballots.filter(
+    ballot => ballot.status === BallotStatus.AUDITED
+  ).length
+
   const getTotalNotFound = ballots.filter(
     ballot => ballot.status === BallotStatus.NOT_FOUND
   ).length
@@ -133,11 +136,13 @@ const BoardTable: React.FC<IProps> = ({ boardName, ballots, url }: IProps) => {
       </p>
       <RightWrapper>
         <LeftSection>
-          <H5>Ballot Audit Status</H5>
+          <StatusTag intent="success">Audited: {getTotalAudited}</StatusTag>
           <StatusTag intent="warning">
             Not Audited: {getTotalNotAudited}
           </StatusTag>
-          <StatusTag intent="danger">Not Found: {getTotalNotFound}</StatusTag>
+          {getTotalNotFound > 0 && (
+            <StatusTag intent="danger">Not Found: {getTotalNotFound}</StatusTag>
+          )}
         </LeftSection>
         <RightSection>
           <LinkButton
