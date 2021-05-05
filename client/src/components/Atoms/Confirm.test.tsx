@@ -36,8 +36,9 @@ describe('Confirm component', () => {
 
     // passing default values for state to open the component
     // as state is mocked
-    const useStateMock: any = () => [confirmMock, setOptions]
-    jest.spyOn(React, 'useState').mockImplementation(useStateMock)
+    jest
+      .spyOn(React, 'useState')
+      .mockImplementation(() => [confirmMock, setOptions])
 
     const { confirm: confirm1, confirmProps: confirmProps1 } = useConfirm()
     confirm1(confirmMock)
@@ -49,7 +50,6 @@ describe('Confirm component', () => {
       name: /Confirm Component/,
     })).closest('.bp3-dialog')! as HTMLElement
     within(dialog).getByText('This action cannot be undone.')
-    expect(container).toMatchSnapshot()
   })
 
   it('closes confirm component', async () => {
@@ -57,8 +57,9 @@ describe('Confirm component', () => {
 
     // passing default values for state to open the component
     // as state is mocked
-    const useStateMock: any = () => [confirmMock, setOptions]
-    jest.spyOn(React, 'useState').mockImplementation(useStateMock)
+    jest
+      .spyOn(React, 'useState')
+      .mockImplementation(() => [confirmMock, setOptions])
 
     const { confirm: confirm1, confirmProps: confirmProps1 } = useConfirm()
     confirm1(confirmMock)
@@ -74,8 +75,7 @@ describe('Confirm component', () => {
 
     // re-mocking state to update the values as
     // state is mocked, setOptions won't update it to close component.
-    const useStateMock2: any = () => [null, setOptions]
-    jest.spyOn(React, 'useState').mockImplementation(useStateMock2)
+    jest.spyOn(React, 'useState').mockImplementation(() => [null, setOptions])
 
     const { confirm: confirm2, confirmProps: confirmProps2 } = useConfirm()
     confirm2(null)
@@ -89,6 +89,5 @@ describe('Confirm component', () => {
         screen.queryByText('This action cannot be undone.')
       ).not.toBeInTheDocument()
     })
-    expect(container).toMatchSnapshot()
   })
 })
