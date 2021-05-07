@@ -14,9 +14,10 @@ const ConfirmConsumer = () => {
         onClick={() =>
           confirm({
             title: 'Test Title',
-            description: 'This action cannot be undone. Do you want to continue?',
+            description:
+              'This action cannot be undone. Do you want to continue?',
             onYesClick: onYesClickMock,
-            yesButtonLabel: 'Yes'
+            yesButtonLabel: 'Yes',
           })
         }
       >
@@ -35,29 +36,35 @@ describe('Confirm component', () => {
   it('opens confirm component', async () => {
     render(<ConfirmConsumer />)
 
-    userEvent.click(screen.getByRole('button', {name: 'Open Confirm'}))
+    userEvent.click(screen.getByRole('button', { name: 'Open Confirm' }))
 
     const dialog = (await screen.findByRole('heading', {
       name: /Test Title/,
     })).closest('.bp3-dialog')! as HTMLElement
-    within(dialog).getByText('This action cannot be undone. Do you want to continue?')
+    within(dialog).getByText(
+      'This action cannot be undone. Do you want to continue?'
+    )
   })
 
   it('closes confirm component when cancelled', async () => {
     render(<ConfirmConsumer />)
 
-    userEvent.click(screen.getByRole('button', {name: 'Open Confirm'}))
+    userEvent.click(screen.getByRole('button', { name: 'Open Confirm' }))
 
     const dialog = (await screen.findByRole('heading', {
       name: /Test Title/,
     })).closest('.bp3-dialog')! as HTMLElement
-    within(dialog).getByText('This action cannot be undone. Do you want to continue?')
+    within(dialog).getByText(
+      'This action cannot be undone. Do you want to continue?'
+    )
 
     userEvent.click(within(dialog).getByRole('button', { name: 'Cancel' }))
 
     await waitFor(() => {
       expect(
-        screen.queryByText('This action cannot be undone. Do you want to continue?')
+        screen.queryByText(
+          'This action cannot be undone. Do you want to continue?'
+        )
       ).not.toBeInTheDocument()
     })
   })
@@ -65,18 +72,22 @@ describe('Confirm component', () => {
   it('closes confirm component when clicked on Yes', async () => {
     render(<ConfirmConsumer />)
 
-    userEvent.click(screen.getByRole('button', {name: 'Open Confirm'}))
+    userEvent.click(screen.getByRole('button', { name: 'Open Confirm' }))
 
     const dialog = (await screen.findByRole('heading', {
       name: /Test Title/,
     })).closest('.bp3-dialog')! as HTMLElement
-    within(dialog).getByText('This action cannot be undone. Do you want to continue?')
+    within(dialog).getByText(
+      'This action cannot be undone. Do you want to continue?'
+    )
 
     userEvent.click(within(dialog).getByRole('button', { name: 'Yes' }))
 
     await waitFor(() => {
       expect(
-        screen.queryByText('This action cannot be undone. Do you want to continue?')
+        screen.queryByText(
+          'This action cannot be undone. Do you want to continue?'
+        )
       ).not.toBeInTheDocument()
     })
   })

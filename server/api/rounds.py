@@ -148,12 +148,11 @@ def count_audited_votes(election: Election, round: Round):
             db_session.add(result)
 
 
-# Get round-by-round audit results
-def contest_results_by_round(contest: Contest) -> Dict[str, Dict[str, int]]:
+def contest_results_by_round(contest: Contest) -> Optional[Dict[str, Dict[str, int]]]:
     results_by_round: Dict[str, Dict[str, int]] = defaultdict(lambda: defaultdict(int))
     for result in contest.results:
         results_by_round[result.round_id][result.contest_choice_id] = result.result
-    return results_by_round
+    return results_by_round if len(results_by_round) > 0 else None
 
 
 # { batch_key: { contest_id: { choice_id: votes }}}
@@ -333,7 +332,7 @@ def sampled_ballot_interpretations_to_cvrs(
 
 
 def hybrid_contest_strata(
-    contest: Contest, round_one: bool = False
+    contest: Contest,
 ) -> Tuple[suite.BallotPollingStratum, suite.BallotComparisonStratum]:
     total_ballots = hybrid_contest_total_ballots(contest)
     vote_counts = hybrid_contest_choice_vote_counts(contest)
@@ -345,38 +344,34 @@ def hybrid_contest_strata(
         choice_id: vote_count.cvr for choice_id, vote_count in vote_counts.items()
     }
 
-    if round_one:
-        non_cvr_previous_samples = 0
-        cvr_previous_samples = 0
+    # For targeted contests, count the number of samples drawn for this
+    # contest so far
+    if contest.is_targeted:
+        num_previous_samples_dict = dict(
+            SampledBallotDraw.query.filter_by(contest_id=contest.id)
+            .join(SampledBallot)
+            .join(Batch)
+            .group_by(Batch.has_cvrs)
+            .values(Batch.has_cvrs, func.count(SampledBallotDraw.ticket_number))
+        )
+    # For opportunistic contests, count the number of ballots in jurisdictions
+    # in this contest's universe that were sampled (for some targeted contest)
     else:
-        # For targeted contests, count the number of samples drawn for this
-        # contest so far
-        if contest.is_targeted:
-            num_previous_samples_dict = dict(
-                SampledBallotDraw.query.filter_by(contest_id=contest.id)
-                .join(SampledBallot)
-                .join(Batch)
-                .group_by(Batch.has_cvrs)
-                .values(Batch.has_cvrs, func.count(SampledBallotDraw.ticket_number))
-            )
-        # For opportunistic contests, count the number of ballots in jurisdictions
-        # in this contest's universe that were sampled (for some targeted contest)
-        else:
-            num_previous_samples_dict = dict(
-                SampledBallot.query.join(Batch)
-                .join(Jurisdiction)
-                .join(Jurisdiction.contests)
-                .filter_by(id=contest.id)
-                .group_by(Batch.has_cvrs)
-                .values(Batch.has_cvrs, func.count(SampledBallot.id))
-            )
+        num_previous_samples_dict = dict(
+            SampledBallot.query.join(Batch)
+            .join(Jurisdiction)
+            .join(Jurisdiction.contests)
+            .filter_by(id=contest.id)
+            .group_by(Batch.has_cvrs)
+            .values(Batch.has_cvrs, func.count(SampledBallot.id))
+        )
 
-        non_cvr_previous_samples = num_previous_samples_dict.get(False, 0)
-        cvr_previous_samples = num_previous_samples_dict.get(True, 0)
+    non_cvr_previous_samples = num_previous_samples_dict.get(False, 0)
+    cvr_previous_samples = num_previous_samples_dict.get(True, 0)
 
     # In hybrid audits, we only store round contest results for non-CVR
     # ballots
-    non_cvr_sample_results = {} if round_one else contest_results_by_round(contest)
+    non_cvr_sample_results = contest_results_by_round(contest) or {}
     non_cvr_stratum = suite.BallotPollingStratum(
         total_ballots.non_cvr,
         non_cvr_vote_counts,
@@ -387,9 +382,7 @@ def hybrid_contest_strata(
     cvr_reported_results = cvrs_for_contest(contest)
     # The CVR sample results are filtered to only CVR ballots
     suite_contest = sampler_contest.from_db_contest(contest)
-    cvr_sample_results = (
-        {} if round_one else sampled_ballot_interpretations_to_cvrs(contest)
-    )
+    cvr_sample_results = sampled_ballot_interpretations_to_cvrs(contest)
     cvr_misstatements = suite.misstatements(
         suite_contest, cvr_reported_results, cvr_sample_results,
     )
@@ -412,7 +405,7 @@ def calculate_risk_measurements(election: Election, round: Round):
             p_values, is_complete = ballot_polling.compute_risk(
                 election.risk_limit,
                 sampler_contest.from_db_contest(contest),
-                contest_results_by_round(contest),
+                contest_results_by_round(contest) or {},
                 AuditMathType(election.audit_math_type),
                 round_sizes(contest),
             )
@@ -800,35 +793,50 @@ def sample_batches(
         db_session.add(sampled_batch_draw)
 
 
-CREATE_ROUND_REQUEST_SCHEMA = {
-    "type": "object",
-    "properties": {
-        "roundNum": {"type": "integer", "minimum": 1,},
-        "sampleSizes": {
-            "type": "object",
-            "patternProperties": {
-                "^.*$": {
-                    "type": "object",
-                    "properties": {
-                        "size": {"type": "integer"},
-                        "key": {"type": "string"},
-                        "prob": {"anyOf": [{"type": "number"}, {"type": "null"}]},
-                        "sizeCvr": {"type": "integer"},  # Only in hybrid audits
-                        "sizeNonCvr": {"type": "integer"},  # Only in hybrid audits
-                    },
-                    "additionalProperties": False,
-                    "required": ["size", "key", "prob"],
-                }
+def create_round_schema(audit_type: AuditType):
+    return {
+        "type": "object",
+        "properties": {
+            "roundNum": {"type": "integer", "minimum": 1,},
+            "sampleSizes": {
+                "type": "object",
+                "patternProperties": {
+                    "^.*$": {
+                        "type": "object",
+                        "properties": {
+                            "key": {"type": "string"},
+                            "prob": {"anyOf": [{"type": "number"}, {"type": "null"}]},
+                            **(
+                                {
+                                    "sizeCvr": {"type": "integer"},
+                                    "sizeNonCvr": {"type": "integer"},
+                                    # We ignore size in hybrid audits
+                                    "size": {
+                                        "anyOf": [{"type": "integer"}, {"type": "null"}]
+                                    },
+                                }
+                                if audit_type == AuditType.HYBRID
+                                else {"size": {"type": "integer"}}
+                            ),
+                        },
+                        "additionalProperties": False,
+                        "required": (
+                            ["sizeCvr", "sizeNonCvr", "key", "prob"]
+                            if audit_type == AuditType.HYBRID
+                            else ["size", "key", "prob"]
+                        ),
+                    }
+                },
             },
         },
-    },
-    "additionalProperties": False,
-    "required": ["roundNum"],
-}
+        "additionalProperties": False,
+        "required": ["roundNum"],
+    }
+
 
 # Raises if invalid
 def validate_round(round: dict, election: Election):
-    validate(round, CREATE_ROUND_REQUEST_SCHEMA)
+    validate(round, create_round_schema(AuditType(election.audit_type)))
 
     current_round = get_current_round(election)
     if current_round and not current_round.draw_sample_task.completed_at:
@@ -869,23 +877,38 @@ def validate_sample_size(round: dict, election: Election):
                 contest.total_ballots_cast,
             ),
             AuditType.BATCH_COMPARISON: (["macro", "custom"], total_batches),
-            AuditType.HYBRID: (["suite"], contest.total_ballots_cast),
+            AuditType.HYBRID: (["suite", "custom"], contest.total_ballots_cast),
         }[AuditType(election.audit_type)]
 
         if sample_size["key"] not in valid_keys:
             raise BadRequest(
                 f"Invalid sample size key for contest {contest.name}: {sample_size['key']}"
             )
-        if sample_size["key"] == "custom" and sample_size["size"] > max_sample_size:
-            ballots_or_batches = (
-                "batches"
-                if election.audit_type == AuditType.BATCH_COMPARISON
-                else "ballots"
-            )
-            raise BadRequest(
-                f"Sample size for contest {contest.name} must be less than or equal to:"
-                f" {max_sample_size} (the total number of {ballots_or_batches} in the contest)"
-            )
+
+        if sample_size["key"] == "custom":
+            if election.audit_type == AuditType.HYBRID:
+                total_ballots = hybrid_contest_total_ballots(contest)
+                if sample_size["sizeCvr"] > total_ballots.cvr:
+                    raise BadRequest(
+                        f"CVR sample size for contest {contest.name} must be less than or equal to:"
+                        f" {total_ballots.cvr} (the total number of CVR ballots in the contest)"
+                    )
+                if sample_size["sizeNonCvr"] > total_ballots.non_cvr:
+                    raise BadRequest(
+                        f"Non-CVR sample size for contest {contest.name} must be less than or equal to:"
+                        f" {total_ballots.non_cvr} (the total number of non-CVR ballots in the contest)"
+                    )
+
+            elif sample_size["size"] > max_sample_size:
+                ballots_or_batches = (
+                    "batches"
+                    if election.audit_type == AuditType.BATCH_COMPARISON
+                    else "ballots"
+                )
+                raise BadRequest(
+                    f"Sample size for contest {contest.name} must be less than or equal to:"
+                    f" {max_sample_size} (the total number of {ballots_or_batches} in the contest)"
+                )
 
 
 @api.route("/election/<election_id>/round", methods=["POST"])
