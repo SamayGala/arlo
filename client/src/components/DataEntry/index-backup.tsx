@@ -261,6 +261,7 @@ const DataEntry: React.FC = () => {
 
   return (
     <Wrapper>
+      <PaddedInner>
         <Switch>
           <Route
             exact
@@ -300,6 +301,7 @@ const DataEntry: React.FC = () => {
             )}
           />
         </Switch>
+      </PaddedInner>
     </Wrapper>
   )
 }
