@@ -2,7 +2,7 @@ import React from 'react'
 import styled from 'styled-components'
 import { H3, H4, Colors, OL, Icon } from '@blueprintjs/core'
 import { Column } from 'react-table'
-import { Table, FlexTable} from '../Atoms/Table'
+import { Table} from '../Atoms/Table'
 import { Inner } from '../Atoms/Wrapper'
 import { BallotStatus } from '../../types'
 import LinkButton from '../Atoms/LinkButton'
@@ -23,7 +23,7 @@ const RightSection = styled.div`
 `
 
 const HeaderWrapper = styled.div`
-  background-color: #eee;
+  background-color: #eeeeee;
   padding: 30px;
 `
 
@@ -39,8 +39,8 @@ const HeaderInnerWrapper = styled(Inner)`
 
 const ContentWrapper = styled.div`
   display: flex;
-  width: 100%;
   margin-top: 30px;
+  width: 100%;
 
   @media only screen and (max-width: 767px) {
     flex-direction: column;
@@ -51,8 +51,8 @@ const TableWrapper = styled.div`
   width: 70%;
 
   @media only screen and (max-width: 767px) {
-    width: 100%;
     order: 2;
+    width: 100%;
   }
 `
 
@@ -61,8 +61,8 @@ const InstructionsWrapper = styled.div`
   padding-left: 30px;
 
   @media only screen and (max-width: 767px) {
-    width: 100%;
     order: 1;
+    width: 100%;
     padding-left: 0;
   }
 `
@@ -102,6 +102,7 @@ const BoardTable: React.FC<IProps> = ({ boardName, ballots, url }: IProps) => {
   const columns: Column<IBallot>[] = [
     {
       Header: 'Batch',
+      // eslint-disable-next-line react/display-name
       accessor: ballot => {
         return (
           <p style = {(ballot.status !== BallotStatus.NOT_AUDITED) ? grayColor : {} }>{ballot.batch.name}</p>
@@ -110,6 +111,7 @@ const BoardTable: React.FC<IProps> = ({ boardName, ballots, url }: IProps) => {
     },
     {
       Header: 'Position',
+      // eslint-disable-next-line react/display-name
       accessor: ballot => {
         return (
           <p style = {(ballot.status !== BallotStatus.NOT_AUDITED) ? grayColor : {} }>{ballot.position}</p>
@@ -203,7 +205,7 @@ const HeaderButton = roundComplete ? (
     intent="success"
     large
   >
-    {totalAudited === 0 ? 'Audit First Ballot' : 'Audit Next Balot'}
+    {totalAudited === 0 ? 'Audit First Ballot' : 'Audit Next Ballot'}
   </LinkButton>
 )
 

@@ -6,7 +6,7 @@ import FormSection from '../Atoms/Form/FormSection'
 import { LabelText, NameField } from './Atoms'
 import FormButton from '../Atoms/Form/FormButton'
 import { IAuditBoard } from '../UserContext'
-import { Wrapper, Inner } from '../Atoms/Wrapper'
+import { Inner } from '../Atoms/Wrapper'
 
 export interface IProps {
   auditBoard: IAuditBoard
