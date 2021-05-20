@@ -223,7 +223,7 @@ const Header: React.FC<{}> = () => {
               </p>
             </NavbarGroup>
             <NavbarGroupAuditBoardLink>
-              <Link to="/auth/logout">Sign Out</Link>
+              <a href="/auth/logout">Sign Out</a>
             </NavbarGroupAuditBoardLink>
           </AuditBoardInnerBar>
         </AuditBoardNav>
