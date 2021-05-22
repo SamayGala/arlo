@@ -55,14 +55,28 @@ const Nav = styled(Navbar)`
 `
 
 const AuditBoardNav = styled(Navbar)`
-  background-color: #000000;
+  background-color: ${Colors.BLACK};
   width: 100%;
   height: auto;
   padding: 0;
-  color: #ffffff;
+  color: ${Colors.WHITE};
   .bp3-navbar-heading img {
     height: 35px;
     padding-top: 5px;
+  }
+
+  .logo-mobile {
+    display: none;
+  }
+
+  @media only screen and (max-width: 767px) {
+    .logo-desktop {
+      display: none;
+    }
+
+    .logo-mobile {
+      display: block;
+    }
   }
 `
 
@@ -87,8 +101,15 @@ const InnerBar = styled(Inner)`
 
 const AuditBoardInnerBar = styled(Inner)`
   justify-content: space-between;
+
   .members-name {
-    margin-bottom: 0;
+    justify-content: center;
+    width: 65%;
+
+    p {
+      margin-bottom: 0;
+      text-align: center;
+    }
   }
 `
 
@@ -210,20 +231,34 @@ const Header: React.FC<{}> = () => {
             <NavbarGroup>
               <NavbarHeading>
                 <Link to="/">
-                  <img src="/arlo.png" alt="Arlo, by VotingWorks" />
+                  <img
+                    src="/arlo-white.svg"
+                    alt="Arlo, by VotingWorks"
+                    className="logo-desktop"
+                  />
+                  <img
+                    src="/arlo-white-mobile.svg"
+                    alt="Arlo, by VotingWorks"
+                    className="logo-mobile"
+                  />
                 </Link>
               </NavbarHeading>
             </NavbarGroup>
-            <NavbarGroup>
+            <NavbarGroup className="members-name">
               <p className="members-name">
-                {auth.user.name} :{' '}
-                <strong>
-                  {auth.user.members.map(member => member.name).join(', ')}
-                </strong>
+                {auth.user.name}
+                {auth.user.members && (
+                  <>
+                    :{' '}
+                    <strong>
+                      {auth.user.members.map(member => member.name).join(', ')}
+                    </strong>
+                  </>
+                )}
               </p>
             </NavbarGroup>
             <NavbarGroupAuditBoardLink>
-              <Link to="/auth/logout">Sign Out</Link>
+              <a href="/auth/logout">Sign Out</a>
             </NavbarGroupAuditBoardLink>
           </AuditBoardInnerBar>
         </AuditBoardNav>
