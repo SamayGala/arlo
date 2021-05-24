@@ -10,7 +10,7 @@ const Block = styled.label`
     position: relative;
     margin-right: 20px;
     margin-bottom: 10px;
-    padding-left: 0
+    padding-left: 0;
 
     .checkbox-text {
       position: absolute;
@@ -22,9 +22,9 @@ const Block = styled.label`
     }
 
     .bp3-control-indicator {
+      margin-left: 0;
       border: 1px solid ${Colors.GRAY4};
       border-radius: 10px;
-      margin-left: 0;
       background-color: ${Colors.WHITE};
       width: 100%;
       height: 2.5em;
@@ -37,13 +37,10 @@ const Block = styled.label`
       &.small {
         height: 2em;
       }
-
-      input:checked ~ .bp3-control-indicator {
-        background-color: #137cbd;
-      }
     }
 
-    input:checked ~ .bp3-control-indicator, &:hover .bp3-control-indicator {
+    input:checked ~ .bp3-control-indicator,
+    &:hover .bp3-control-indicator {
       background-color: ${Colors.BLUE3};
       background-image: none;
       color: #ffffff;

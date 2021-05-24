@@ -1,6 +1,6 @@
 import styled from 'styled-components'
 import { Field } from 'formik'
-import { RadioGroup, Divider } from '@blueprintjs/core'
+import { RadioGroup, Divider, H4, Colors } from '@blueprintjs/core'
 
 export const FlushDivider = styled(Divider)`
   margin: 5px 0;
@@ -9,7 +9,7 @@ export const FlushDivider = styled(Divider)`
 export const BallotRow = styled.div`
   display: flex;
   justify-content: flex-start;
-  margin: 20px 0;
+  margin: 25px 0;
 
   .ballot-main {
     width: 100%;
@@ -43,6 +43,10 @@ export const ContestCard = styled.div`
   margin: 20px 0;
   background-color: #ced9e0;
   padding: 20px;
+
+  &:first-child {
+    margin-top: 10px;
+  }
 `
 
 export const RadioGroupFlex = styled(RadioGroup)`
@@ -75,7 +79,6 @@ export const NameField = styled(Field)`
 export const BlockCheckboxes = styled.div`
   display: flex;
   justify-content: space-between;
-
   @media only screen and (max-width: 767px) {
     flex-direction: column;
   }
@@ -85,17 +88,21 @@ export const LeftCheckboxes = styled.div`
   display: flex;
   flex-direction: column;
   width: 50%;
-
   @media only screen and (max-width: 767px) {
     width: 100%;
   }
 `
 
 export const RightCheckboxes = styled.div`
-  width: 30%;
-
+  width: 25%;
   @media only screen and (max-width: 767px) {
     margin-top: 20px;
     width: 100%;
   }
+`
+
+export const SubTitle = styled(H4)`
+  margin-bottom: 0;
+  color: ${Colors.BLACK};
+  font-weight: 400;
 `
