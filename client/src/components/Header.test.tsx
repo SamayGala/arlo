@@ -27,9 +27,9 @@ describe('Header', () => {
       renderHeader('/')
 
       // Arlo logo
-      const arloLogo = await screen.findByRole('link', {
+      const arloLogo = screen.getAllByRole('link', {
         name: 'Arlo, by VotingWorks',
-      })
+      })[0]
       expect(arloLogo).toHaveAttribute('href', '/')
       expect(within(arloLogo).getByRole('img')).toHaveAttribute(
         'src',

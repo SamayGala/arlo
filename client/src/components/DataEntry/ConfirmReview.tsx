@@ -139,14 +139,13 @@ export const ConfirmReview = ({
       </div>
       <DialogFooter className={Classes.DIALOG_FOOTER}>
         <div className={Classes.DIALOG_FOOTER_ACTIONS}>
-          <Button disabled={isSubmitting} onClick={onClose} large>
+          <Button disabled={isSubmitting} onClick={onClose}>
             Change Selections
           </Button>
           <YesButton
             intent={Intent.SUCCESS}
             onClick={handleYesClick}
             loading={isSubmitting}
-            large
           >
             Confirm Selections
           </YesButton>

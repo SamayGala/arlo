@@ -66,7 +66,8 @@ const UserMenu = styled.div`
 `
 
 const InnerBar = styled(Inner)`
-  display: inherit;
+  display: flex;
+  justify-content: space-between;
 
   .members-name p {
     margin-bottom: 0;
