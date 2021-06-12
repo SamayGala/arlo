@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react'
 import styled from 'styled-components'
 import { select, json, geoPath, geoAlbers } from 'd3'
-import { feature, mesh } from 'topojson-client'
+import { feature } from 'topojson-client'
 // topojson-specification is defined in package.json but throwing linting error here
 // eslint-disable-next-line import/no-unresolved
 import { Topology } from 'topojson-specification'
@@ -74,6 +74,10 @@ const SVGMap = styled.svg`
 
   .gray {
     fill: ${Colors.GRAY4};
+  }
+
+  .default {
+    fill: ${Colors.WHITE};
   }
 `
 
@@ -215,7 +219,7 @@ const Map = ({
           }
         }
       }
-      return ''
+      return 'default'
     },
     [jurisdictions]
   )
