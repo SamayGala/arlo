@@ -293,15 +293,20 @@ const Progress: React.FC<IProps> = ({
   return (
     <Wrapper>
       <H2Title>Audit Progress</H2Title>
+      {jurisdictions && auditSettings.state && (
+        <Map
+          stateName={auditSettings.state}
+          jurisdictions={jurisdictions}
+          isRoundStarted={!!round}
+          auditType={auditSettings.auditType}
+        />
+      )}
       <p>
         Click on a column name to sort by that column&apos;s data. To reverse
         sort, click on the column name again.
         <br /> To view a single jurisdiction&apos;s data, click the name of the
         jurisdiction.
       </p>
-      {jurisdictions && auditSettings.state && (
-        <Map stateName={auditSettings.state} jurisdictions={jurisdictions} />
-      )}
       <TableControls>
         <Switch
           checked={isShowingUnique}
