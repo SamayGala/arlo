@@ -481,6 +481,7 @@ describe('Progress screen', () => {
 
   it('shows a message in the detail modal when no batches sampled', async () => {
     const expectedCalls = [
+      jaApiCalls.getMapData,
       jaApiCalls.getAuditBoards(auditBoardMocks.unfinished),
       jaApiCalls.getBatches([]),
     ]
