@@ -164,6 +164,28 @@ def contest_results_by_round(contest: Contest) -> Optional[Dict[str, Dict[str, i
     return results_by_round if len(results_by_round) > 0 else None
 
 
+def samples_not_found_by_round(contest: Contest) -> Dict[str, int]:
+    if contest.is_targeted:
+        return dict(
+            SampledBallotDraw.query.filter_by(contest_id=contest.id)
+            .join(SampledBallot)
+            .filter_by(status=BallotStatus.NOT_FOUND)
+            .group_by(SampledBallotDraw.round_id)
+            .values(SampledBallotDraw.round_id, func.count())
+        )
+    else:
+        return dict(
+            SampledBallot.query.filter_by(status=BallotStatus.NOT_FOUND)
+            .join(Batch)
+            .join(Jurisdiction)
+            .join(Jurisdiction.contests)
+            .filter_by(id=contest.id)
+            .join(SampledBallot.draws)
+            .group_by(SampledBallotDraw.round_id)
+            .values(SampledBallotDraw.round_id, func.count(SampledBallot.id.distinct()))
+        )
+
+
 # { batch_key: { contest_id: { choice_id: votes }}}
 BatchTallies = Dict[Tuple[str, str], Dict[str, Dict[str, int]]]
 
@@ -429,6 +451,7 @@ def calculate_risk_measurements(election: Election, round: Round):
                 election.risk_limit,
                 sampler_contest.from_db_contest(contest),
                 contest_results_by_round(contest) or {},
+                samples_not_found_by_round(contest),
                 AuditMathType(election.audit_math_type),
                 round_sizes(contest),
             )
@@ -1033,3 +1056,37 @@ def list_rounds_jurisdiction_admin(
     election: Election, jurisdiction: Jurisdiction  # pylint: disable=unused-argument
 ):
     return jsonify({"rounds": [serialize_round(r) for r in election.rounds]})
+
+
+@api.route("/election/<election_id>/round/<round_id>", methods=["DELETE"])
+@restrict_access([UserType.AUDIT_ADMIN])
+def undo_create_round(election: Election, round: Round):
+    current_round = get_current_round(election)
+    if not current_round or current_round.id != round.id:
+        raise Conflict(
+            "Cannot undo starting this round because it is not the current round."
+        )
+
+    if len(list(round.audit_boards)) > 0:
+        raise Conflict(
+            "Cannot undo starting this round because some jurisdictions have already created audit boards."
+        )
+
+    db_session.delete(round)
+    # Delete any sampled ballots that were created this round (they will have no
+    # associated SampledBallotDraws, since they are deleted by cascade when
+    # deleting the round).
+    SampledBallot.query.filter(
+        SampledBallot.id.in_(
+            SampledBallot.query.join(Batch)
+            .join(Jurisdiction)
+            .filter_by(election_id=election.id)
+            .filter(not_(SampledBallot.draws.any()))
+            .with_entities(SampledBallot.id)
+            .subquery()
+        )
+    ).with_entities(SampledBallot).delete(synchronize_session=False)
+
+    db_session.commit()
+
+    return jsonify(status="ok")

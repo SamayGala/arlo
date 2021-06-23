@@ -48,16 +48,30 @@ const postRound = async (
   return response !== null
 }
 
+const deleteRound = async (electionId: string, roundId: string) => {
+  const response = await api(`/election/${electionId}/round/${roundId}`, {
+    method: 'DELETE',
+  })
+  return response !== null
+}
+
 export const isDrawSampleComplete = (rounds: IRound[]) =>
   rounds[rounds.length - 1].drawSampleTask.completedAt !== null
 
 export const drawSampleError = (rounds: IRound[]) =>
   rounds.length > 0 && rounds[rounds.length - 1].drawSampleTask.error
 
+export const isAuditStarted = (rounds: IRound[]) =>
+  rounds.length > 0 && isDrawSampleComplete(rounds) && !drawSampleError(rounds)
+
 const useRoundsAuditAdmin = (
   electionId: string,
   refreshId?: string
-): [IRound[] | null, (sampleSizes?: ISampleSizes) => Promise<boolean>] => {
+): [
+  IRound[] | null,
+  (sampleSizes?: ISampleSizes) => Promise<boolean>,
+  () => Promise<boolean>
+] => {
   const [rounds, setRounds] = useState<IRound[] | null>(null)
 
   const startNextRound = async (sampleSizes?: ISampleSizes) => {
@@ -66,6 +80,16 @@ const useRoundsAuditAdmin = (
     const nextRoundNum =
       rounds.length === 0 ? 1 : rounds[rounds.length - 1].roundNum + 1
     if (await postRound(electionId, nextRoundNum, sampleSizes)) {
+      setRounds(await getRounds(electionId))
+      return true
+    }
+    return false
+  }
+
+  const undoRoundStart = async () => {
+    if (rounds === null || rounds.length === 0)
+      throw new Error('Cannot undo round start')
+    if (await deleteRound(electionId, rounds[rounds.length - 1].id)) {
       setRounds(await getRounds(electionId))
       return true
     }
@@ -90,7 +114,7 @@ const useRoundsAuditAdmin = (
     })()
   }, [electionId, refreshId])
 
-  return [rounds, startNextRound]
+  return [rounds, startNextRound, undoRoundStart]
 }
 
 export default useRoundsAuditAdmin

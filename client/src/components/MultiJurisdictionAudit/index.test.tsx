@@ -321,6 +321,7 @@ describe('AA setup flow', () => {
       aaApiCalls.getUser,
       ...loadAfterLaunch,
       ...loadAfterLaunch,
+      ...loadAfterLaunch,
     ]
     const routeProps = routerTestProps('/election/1', { electionId: '1' })
     await withMockFetch(expectedCalls, async () => {
@@ -343,7 +344,7 @@ describe('AA setup flow', () => {
     })
   })
 
-  it('shows an error if drawing the sample fails', async () => {
+  it('shows an error and undo button if drawing the sample fails', async () => {
     const loadAfterLaunch = [
       aaApiCalls.getRounds(roundMocks.drawSampleErrored),
       aaApiCalls.getJurisdictions,
@@ -356,6 +357,12 @@ describe('AA setup flow', () => {
       ...loadAfterLaunch,
       aaApiCalls.getSettings(auditSettings.all),
       aaApiCalls.getJurisdictionFile,
+      {
+        url: '/api/election/1/round/round-1',
+        options: { method: 'DELETE' },
+        response: { status: 'ok' },
+      },
+      aaApiCalls.getRounds(roundMocks.empty),
     ]
     await withMockFetch(expectedCalls, async () => {
       render(
@@ -372,6 +379,9 @@ describe('AA setup flow', () => {
         'Please contact our support team for help resolving this issue.'
       )
       screen.getByText('Error: something went wrong')
+
+      userEvent.click(screen.getByRole('button', { name: 'Undo Audit Launch' }))
+      await screen.findByText('The audit has not started.')
     })
   })
 })
@@ -406,7 +416,7 @@ describe('JA setup', () => {
     const expectedCalls = [
       jaApiCalls.getUser,
       jaApiCalls.getSettings(auditSettings.batchComparisonAll),
-      jaApiCalls.getRounds,
+      jaApiCalls.getRounds([]),
       jaApiCalls.getBallotManifestFile(manifestMocks.empty),
       jaApiCalls.getBatchTalliesFile(talliesMocks.empty),
       jaApiCalls.getCVRSfile(cvrsMocks.empty),
@@ -422,7 +432,7 @@ describe('JA setup', () => {
     const expectedCalls = [
       jaApiCalls.getUser,
       jaApiCalls.getSettings(auditSettings.batchComparisonAll),
-      jaApiCalls.getRounds,
+      jaApiCalls.getRounds([]),
       jaApiCalls.getBallotManifestFile(manifestMocks.empty),
       jaApiCalls.getBatchTalliesFile(talliesMocks.empty),
       jaApiCalls.getCVRSfile(cvrsMocks.empty),
@@ -463,7 +473,7 @@ describe('JA setup', () => {
     const expectedCalls = [
       jaApiCalls.getUser,
       jaApiCalls.getSettings(auditSettings.batchComparisonAll),
-      jaApiCalls.getRounds,
+      jaApiCalls.getRounds([]),
       jaApiCalls.getBallotManifestFile(manifestMocks.empty),
       jaApiCalls.getBatchTalliesFile(talliesMocks.empty),
       jaApiCalls.getCVRSfile(cvrsMocks.empty),
@@ -510,7 +520,7 @@ describe('JA setup', () => {
     const expectedCalls = [
       jaApiCalls.getUser,
       jaApiCalls.getSettings(auditSettings.batchComparisonAll),
-      jaApiCalls.getRounds,
+      jaApiCalls.getRounds([]),
       jaApiCalls.getBallotManifestFile(manifestMocks.processed),
       jaApiCalls.getBatchTalliesFile(talliesMocks.empty),
       jaApiCalls.getCVRSfile(cvrsMocks.empty),
@@ -544,7 +554,7 @@ describe('JA setup', () => {
     const expectedCalls = [
       jaApiCalls.getUser,
       jaApiCalls.getSettings(auditSettings.ballotComparisonAll),
-      jaApiCalls.getRounds,
+      jaApiCalls.getRounds([]),
       jaApiCalls.getBallotManifestFile(manifestMocks.processed),
       jaApiCalls.getBatchTalliesFile(talliesMocks.empty),
       jaApiCalls.getCVRSfile(cvrsMocks.empty),
@@ -578,7 +588,7 @@ describe('JA setup', () => {
     const expectedCalls = [
       jaApiCalls.getUser,
       jaApiCalls.getSettings(auditSettings.batchComparisonAll),
-      jaApiCalls.getRounds,
+      jaApiCalls.getRounds([]),
       jaApiCalls.getBallotManifestFile(manifestMocks.empty),
       jaApiCalls.getBatchTalliesFile(talliesMocks.empty),
       jaApiCalls.getCVRSfile(cvrsMocks.empty),
@@ -617,7 +627,7 @@ describe('JA setup', () => {
     const expectedCalls = [
       jaApiCalls.getUser,
       jaApiCalls.getSettings(auditSettings.batchComparisonAll),
-      jaApiCalls.getRounds,
+      jaApiCalls.getRounds([]),
       jaApiCalls.getBallotManifestFile(manifestMocks.processed),
       jaApiCalls.getBatchTalliesFile(talliesMocks.empty),
       jaApiCalls.getCVRSfile(cvrsMocks.empty),
@@ -650,6 +660,38 @@ describe('JA setup', () => {
 
       userEvent.click(manifestButton)
       await screen.findByText('Current file:')
+    })
+  })
+
+  it('stays on the file upload screen when sample is being drawn', async () => {
+    const expectedCalls = [
+      jaApiCalls.getUser,
+      jaApiCalls.getSettings(auditSettings.all),
+      jaApiCalls.getRounds(roundMocks.drawSampleInProgress),
+      jaApiCalls.getBallotManifestFile(manifestMocks.processed),
+      jaApiCalls.getBatchTalliesFile(talliesMocks.empty),
+      jaApiCalls.getCVRSfile(cvrsMocks.empty),
+    ]
+    await withMockFetch(expectedCalls, async () => {
+      renderView()
+      await screen.findByRole('heading', { name: 'Audit Source Data' })
+      screen.getByText('The audit has not started.')
+    })
+  })
+
+  it('stays on the file upload screen when drawing sample errors', async () => {
+    const expectedCalls = [
+      jaApiCalls.getUser,
+      jaApiCalls.getSettings(auditSettings.all),
+      jaApiCalls.getRounds(roundMocks.drawSampleErrored),
+      jaApiCalls.getBallotManifestFile(manifestMocks.processed),
+      jaApiCalls.getBatchTalliesFile(talliesMocks.empty),
+      jaApiCalls.getCVRSfile(cvrsMocks.empty),
+    ]
+    await withMockFetch(expectedCalls, async () => {
+      renderView()
+      await screen.findByRole('heading', { name: 'Audit Source Data' })
+      screen.getByText('The audit has not started.')
     })
   })
 })

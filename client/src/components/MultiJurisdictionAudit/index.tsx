@@ -25,6 +25,7 @@ import useContests from './useContests'
 import useRoundsAuditAdmin, {
   isDrawSampleComplete,
   drawSampleError,
+  isAuditStarted,
 } from './useRoundsAuditAdmin'
 import useAuditSettingsJurisdictionAdmin from './RoundManagement/useAuditSettingsJurisdictionAdmin'
 import H2Title from '../Atoms/H2Title'
@@ -44,7 +45,10 @@ export const AuditAdminView: React.FC = () => {
   const { electionId, view } = useParams<IParams>()
   const [refreshId, setRefreshId] = useState(uuidv4())
 
-  const [rounds, startNextRound] = useRoundsAuditAdmin(electionId, refreshId)
+  const [rounds, startNextRound, undoRoundStart] = useRoundsAuditAdmin(
+    electionId,
+    refreshId
+  )
   const jurisdictions = useJurisdictions(electionId, refreshId)
   const [contests] = useContests(electionId, undefined, refreshId)
   const [auditSettings] = useAuditSettings(electionId, refreshId)
@@ -53,8 +57,6 @@ export const AuditAdminView: React.FC = () => {
     auditSettings !== null && auditSettings.auditType === 'BALLOT_COMPARISON'
   const isHybrid =
     auditSettings !== null && auditSettings.auditType === 'HYBRID'
-  const isDrawingSample =
-    rounds !== null && rounds.length > 0 && !isDrawSampleComplete(rounds)
   const [stage, setStage] = useState<ElementType<typeof setupStages>>(
     'participants'
   )
@@ -67,7 +69,12 @@ export const AuditAdminView: React.FC = () => {
     setRefreshId
   )
 
-  useEffect(refresh, [refresh, isBallotComparison, isHybrid, isDrawingSample])
+  useEffect(refresh, [
+    refresh,
+    isBallotComparison,
+    isHybrid,
+    rounds !== null && isAuditStarted(rounds),
+  ])
 
   if (!jurisdictions || !contests || !rounds || !auditSettings) return null // Still loading
 
@@ -82,7 +89,7 @@ export const AuditAdminView: React.FC = () => {
     }
   })
 
-  if (isDrawingSample) {
+  if (rounds.length > 0 && !isDrawSampleComplete(rounds)) {
     return (
       <Wrapper>
         <Inner>
@@ -113,6 +120,7 @@ export const AuditAdminView: React.FC = () => {
           <AuditAdminStatusBox
             rounds={rounds}
             startNextRound={startNextRound}
+            undoRoundStart={undoRoundStart}
             jurisdictions={jurisdictions}
             contests={contests}
             auditSettings={auditSettings}
@@ -137,6 +145,7 @@ export const AuditAdminView: React.FC = () => {
           <AuditAdminStatusBox
             rounds={rounds}
             startNextRound={startNextRound}
+            undoRoundStart={undoRoundStart}
             jurisdictions={jurisdictions}
             contests={contests}
             auditSettings={auditSettings}
@@ -205,7 +214,7 @@ export const JurisdictionAdminView: React.FC = () => {
   )
     return null // Still loading
 
-  if (!rounds.length) {
+  if (!isAuditStarted(rounds)) {
     return (
       <Wrapper>
         <JurisdictionAdminStatusBox

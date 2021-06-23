@@ -234,7 +234,6 @@ const Map = ({
             respJsonData.objects.states
           ) as GeoJSON.FeatureCollection).features
         )
-
         const singleState = (feature(
           respJsonData,
           respJsonData.objects.states
