@@ -141,7 +141,7 @@ const Map = ({
     return filteredState && filteredState.label
   }
 
-  const getJurisdictionStatusNew = useCallback(
+  const getJurisdictionStatusClass = useCallback(
     (countyName: string) => {
       const filteredJurisdiction = jurisdictions.find(
         jurisdiction => jurisdiction.name === countyName
@@ -210,7 +210,7 @@ const Map = ({
         jsonData,
         jsonData.objects.counties
       ) as GeoJSON.FeatureCollection).features.filter(
-        (d, i) =>
+        d =>
           d &&
           d.id &&
           usState &&
@@ -242,7 +242,7 @@ const Map = ({
         .attr('class', d => {
           let statusClass = ''
           if (d && d.properties) {
-            statusClass = getJurisdictionStatusNew(d.properties.name)
+            statusClass = getJurisdictionStatusClass(d.properties.name)
           }
           return `county ${statusClass}`
         })
@@ -257,7 +257,7 @@ const Map = ({
           select('#tooltip').style('display', 'none')
         })
     }
-  }, [jsonData, getJurisdictionStatusNew, stateName, jurisdictions])
+  }, [jsonData, getJurisdictionStatusClass, stateName, jurisdictions])
 
   return (
     <MapWrapper>
