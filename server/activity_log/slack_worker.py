@@ -8,6 +8,7 @@ from ..models import ActivityLogRecord
 from ..auth.lib import UserType
 from ..database import db_session
 from . import activity_log
+from ..sentry import configure_sentry
 
 
 # pylint: disable=too-many-return-statements
@@ -17,12 +18,15 @@ def slack_message(activity: activity_log.Activity):
     org_context = dict(
         type="mrkdwn", text=f":flag-us: <{org_link}|{base.organization_name}>",
     )
-    user_type = {
-        UserType.AUDIT_ADMIN: "Audit admin",
-        UserType.JURISDICTION_ADMIN: "Jurisdiction admin",
-        UserType.AUDIT_BOARD: "",  # We already put "Audit Board" in every audit board's name
-        None: "",
-    }[UserType(base.user_type)]
+    user_type = (
+        {
+            UserType.AUDIT_ADMIN: "Audit admin",
+            UserType.JURISDICTION_ADMIN: "Jurisdiction admin",
+            UserType.AUDIT_BOARD: "",  # We already put "Audit Board" in every audit board's name
+        }[UserType(base.user_type)]
+        if base.user_type
+        else ""
+    )
     user_name = (
         activity.audit_board_name
         if isinstance(activity, activity_log.AuditBoardSignOff)
@@ -311,6 +315,7 @@ def send_new_slack_notification(organization_id: str = None) -> None:
 
 
 if __name__ == "__main__":  # pragma: no cover
+    configure_sentry()
     # We send at most one Slack notification per second, since that's what the
     # Slack API allows.
     while True:
