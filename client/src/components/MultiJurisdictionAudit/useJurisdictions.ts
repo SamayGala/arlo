@@ -41,13 +41,13 @@ export interface IJurisdiction {
   } | null
 }
 
-export const getJurisdictionStatus = (jursidiction: IJurisdiction) => {
+export const getJurisdictionStatus = (jurisdiction: IJurisdiction) => {
   const {
     currentRoundStatus,
     ballotManifest,
     batchTallies,
     cvrs,
-  } = jursidiction
+  } = jurisdiction
 
   if (!currentRoundStatus) {
     const files: IFileInfo['processing'][] = [ballotManifest.processing]

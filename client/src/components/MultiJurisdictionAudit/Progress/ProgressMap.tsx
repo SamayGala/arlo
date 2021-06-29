@@ -168,7 +168,7 @@ const Map = ({
             return 'default'
         }
       }
-      // incase of non-pariticpant jurisdictions
+      // incase of non-participant jurisdictions
       return 'default'
     },
     [jurisdictions]
